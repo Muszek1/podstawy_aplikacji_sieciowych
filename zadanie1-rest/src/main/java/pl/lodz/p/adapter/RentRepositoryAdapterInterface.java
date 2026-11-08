@@ -1,0 +1,14 @@
+package pl.lodz.p.adapter;
+
+import pl.lodz.p.model.domain.Rent;
+
+import java.util.List;
+import java.util.UUID;
+
+public interface RentRepositoryAdapterInterface {
+    Rent saveRent(Rent rent);
+    void endRent(UUID uuid);
+    Rent findRentByUuid(UUID uuid);
+    List<Rent> findAllRents();
+    List<Rent> findAllGuestRents(String personalId);
+}

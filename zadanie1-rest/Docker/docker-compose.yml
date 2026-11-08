@@ -1,0 +1,56 @@
+services:
+  mongo1:
+    image: mongo:7.0
+    container_name: mongo1
+    hostname: mongo1
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--port", "27017", "--quiet"]
+    ports:
+      - "27017:27017"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  mongo2:
+    image: mongo:7.0
+    container_name: mongo2
+    hostname: mongo2
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--port", "27018", "--quiet"]
+    ports:
+      - "27018:27018"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  mongo3:
+    image: mongo:7.0
+    container_name: mongo3
+    hostname: mongo3
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--port", "27019", "--quiet"]
+    ports:
+      - "27019:27019"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  mongo-init:
+    image: mongo:7.0
+    container_name: mongo-init
+    depends_on:
+      - mongo1
+      - mongo2
+      - mongo3
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: "no"
+    entrypoint:
+      - bash
+      - -c
+      - |
+        sleep 5
+        mongosh --host host.docker.internal:27017 --eval '
+          rs.initiate({
+            _id: "rs0",
+            members: [
+              { _id: 0, host: "host.docker.internal:27017", priority: 2 },
+              { _id: 1, host: "host.docker.internal:27018", priority: 1 },
+              { _id: 2, host: "host.docker.internal:27019", priority: 1 }
+            ]
+          });
+        '

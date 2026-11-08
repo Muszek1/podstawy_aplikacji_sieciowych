@@ -1,0 +1,56 @@
+package pl.lodz.p.adapter;
+
+import pl.lodz.p.adapter.mapper.RentMapper;
+import pl.lodz.p.model.db.RentEnt;
+import pl.lodz.p.model.domain.Rent;
+import pl.lodz.p.repository.MongoRentRepository;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+public class MongoRentRepositoryAdapter implements RentRepositoryAdapterInterface {
+    private final MongoRentRepository rentRepository;
+
+    public MongoRentRepositoryAdapter(MongoRentRepository rentRepository) {
+        this.rentRepository = rentRepository;
+    }
+
+    @Override
+    public Rent saveRent(Rent rent) {
+        RentEnt savedRent = rentRepository.saveRent(
+                RentMapper.mapRentFromDomainToDb(rent),
+                rent.getRoom().getNumber(),
+                rent.getGuest().getPersonalId()
+        );
+        return RentMapper.mapRentFromDbToDomain(savedRent);
+    }
+
+    @Override
+    public void endRent(UUID uuid) {
+        rentRepository.endRent(uuid);
+    }
+
+    @Override
+    public Rent findRentByUuid(UUID uuid) {
+        return RentMapper.mapRentFromDbToDomain(rentRepository.findRentByUuid(uuid));
+    }
+
+    @Override
+    public List<Rent> findAllRents() {
+        List<Rent> allRents = new ArrayList<>();
+        for (RentEnt rentEnt : rentRepository.findAllRents()) {
+            allRents.add(RentMapper.mapRentFromDbToDomain(rentEnt));
+        }
+        return allRents;
+    }
+
+    @Override
+    public List<Rent> findAllGuestRents(String personalId) {
+        List<Rent> guestRents = new ArrayList<>();
+        for (RentEnt rentEnt : rentRepository.findGuestRents(personalId)) {
+            guestRents.add(RentMapper.mapRentFromDbToDomain(rentEnt));
+        }
+        return guestRents;
+    }
+}

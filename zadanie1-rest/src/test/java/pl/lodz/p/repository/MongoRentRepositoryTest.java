@@ -1,0 +1,339 @@
+package pl.lodz.p.repository;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import pl.lodz.p.AbstractDatabaseTest;
+import pl.lodz.p.adapter.mapper.RentMapper;
+import pl.lodz.p.adapter.mapper.RoomMapper;
+import pl.lodz.p.exception.ConcurrentOperationException;
+import pl.lodz.p.exception.EntityNotFoundException;
+import pl.lodz.p.exception.RepositoryException;
+import pl.lodz.p.model.db.RentEnt;
+import pl.lodz.p.model.domain.*;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class MongoRentRepositoryTest extends AbstractDatabaseTest {
+    private MongoRentRepository rentRepository;
+    private MongoGuestRepository guestRepository;
+    private MongoRoomRepository roomRepository;
+
+    private Client validClient;
+    private Client validClient2;
+    private Room validRoom;
+    private Room validRoom2;
+    private Room validRoom3;
+    private Room archivedRoom;
+    private Rent validRent;
+    private Rent validRent2;
+    private Rent validRent3;
+    private Rent validRent4;
+    private Rent invalidRentNullBeginTime;
+    private Rent invalidRentNotUniqueUuid;
+    private Rent invalidRentArchivedRoom;
+
+    @BeforeEach
+    public void setup() {
+        rentRepository = new MongoRentRepository(database);
+        roomRepository = new MongoRoomRepository(database);
+        guestRepository = new MongoGuestRepository(database);
+        clearDatabase();
+
+        String strBegin = "1986-04-08 12:30";
+        String strEnd = "1986-04-10 12:30";
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
+        LocalDateTime dateTimeBegin = LocalDateTime.parse(strBegin, formatter);
+        LocalDateTime dateTimeEnd = LocalDateTime.parse(strEnd, formatter);
+
+        Address address = new Address("Warszawa", "Lesna", "6A");
+        GuestType guestType = new GuestTypePremium();
+        validClient = new Client("Jan", "Kowalski", "1234", address, guestType);
+        validClient2 = new Client("Jakub", "Pawlak", "456", address, guestType);
+        validRoom = new Room("12", 3, 200.0);
+        validRoom2 = new Room("13", 2, 100.0);
+        validRoom3 = new Room("16", 2, 100.0);
+        archivedRoom = new Room("14", 2, 100.0);
+        validRent = new Rent(UUID.fromString("bbcc4621-d88f-4a94-ae2f-b38072bf5087"), dateTimeBegin, dateTimeEnd, validClient, validRoom, 200.0);
+        validRent2 = new Rent(UUID.fromString("bbcc4621-d18f-4a94-ae2f-b38072bf5087"), dateTimeBegin, dateTimeEnd, validClient, validRoom, 100.0);
+        validRent3 = new Rent(UUID.fromString("aacc4621-d18f-4a94-ae2f-b38072bf5087"), dateTimeBegin, dateTimeEnd, validClient, validRoom2, 100.0);
+        validRent4 = new Rent(UUID.fromString("ddcc4621-d18f-4a94-ae2f-b38072bf5087"), dateTimeBegin, dateTimeEnd, validClient2, validRoom3, 100.0);
+        invalidRentNullBeginTime = new Rent(UUID.fromString("abcc4621-d88f-4a94-ae2f-b38072bf5087"), null, dateTimeEnd, validClient, validRoom, 200.0);
+        invalidRentNotUniqueUuid = new Rent(UUID.fromString("bbcc4621-d88f-4a94-ae2f-b38072bf5087"), dateTimeBegin, dateTimeEnd, validClient2, validRoom2, 200.0);
+        invalidRentArchivedRoom = new Rent(UUID.fromString("bbcc5521-d88f-4a94-ae2f-b38072bf5087"), dateTimeBegin, dateTimeEnd, validClient, archivedRoom, 200.0);
+    }
+
+    @Test
+    public void saveRentTest() {
+        guestRepository.saveGuest(GuestMapper.mapGuestFromDomainToDb(validClient));
+        roomRepository.saveRoom(RoomMapper.mapRoomFromDomainToDb(validRoom));
+
+        assertDoesNotThrow(() -> rentRepository.saveRent(RentMapper.mapRentFromDomainToDb(validRent), validRent.getRoom().getNumber(), validRent.getGuest().getPersonalId()));
+        Rent addedRent = RentMapper.mapRentFromDbToDomain(rentRepository.findRentByUuid(UUID.fromString("bbcc4621-d88f-4a94-ae2f-b38072bf5087")));
+
+        assertEquals(validRent, addedRent);
+        assertTrue(addedRent.getRoom().isRented());
+        assertTrue(addedRent.isActive());
+
+        assertTrue(RoomMapper.mapRoomFromDbToDomain(roomRepository.findRoomByNumber("12")).isRented());
+        assertTrue(RentMapper.mapRentFromDbToDomain(rentRepository.findRentByUuid(UUID.fromString("bbcc4621-d88f-4a94-ae2f-b38072bf5087"))).isActive());
+    }
+
+    @Test
+    public void saveInvalidRentTest() {
+        guestRepository.saveGuest(GuestMapper.mapGuestFromDomainToDb(validClient));
+        guestRepository.saveGuest(GuestMapper.mapGuestFromDomainToDb(validClient2));
+        roomRepository.saveRoom(RoomMapper.mapRoomFromDomainToDb(validRoom));
+        roomRepository.saveRoom(RoomMapper.mapRoomFromDomainToDb(validRoom2));
+
+        // Przekaznie null do beginTime
+        assertThrows(RepositoryException.class, () -> rentRepository.saveRent(RentMapper.mapRentFromDomainToDb(invalidRentNullBeginTime), invalidRentNullBeginTime.getRoom().getNumber(), invalidRentNullBeginTime.getGuest().getPersonalId()));
+
+        rentRepository.saveRent(RentMapper.mapRentFromDomainToDb(validRent), validRent.getRoom().getNumber(), validRent.getGuest().getPersonalId());
+
+        // Brak unikalności UUID
+        assertThrows(RepositoryException.class, () -> rentRepository.saveRent(RentMapper.mapRentFromDomainToDb(invalidRentNotUniqueUuid), invalidRentNotUniqueUuid.getRoom().getNumber(), invalidRentNotUniqueUuid.getGuest().getPersonalId()));
+
+
+    }
+
+    @Test
+    public void rentInvalidRoomTest() {
+        guestRepository.saveGuest(GuestMapper.mapGuestFromDomainToDb(validClient));
+        roomRepository.saveRoom(RoomMapper.mapRoomFromDomainToDb(validRoom));
+        roomRepository.saveRoom(RoomMapper.mapRoomFromDomainToDb(archivedRoom));
+
+        roomRepository.setRoomArchivedStatus("14", true);
+
+
+        rentRepository.saveRent(RentMapper.mapRentFromDomainToDb(validRent), validRent.getRoom().getNumber(), validRent.getGuest().getPersonalId());
+
+        // Już wypożyczony pokój
+        assertThrows(ConcurrentOperationException.class, () -> rentRepository.saveRent(RentMapper.mapRentFromDomainToDb(validRent), validRent.getRoom().getNumber(), validRent.getGuest().getPersonalId()));
+
+        // Zarchiwizowany pokój
+        assertThrows(ConcurrentOperationException.class, () -> rentRepository.saveRent(RentMapper.mapRentFromDomainToDb(invalidRentArchivedRoom), invalidRentArchivedRoom.getRoom().getNumber(), invalidRentArchivedRoom.getGuest().getPersonalId()));
+    }
+
+    @Test
+    public void endRentTest() {
+        guestRepository.saveGuest(GuestMapper.mapGuestFromDomainToDb(validClient));
+        roomRepository.saveRoom(RoomMapper.mapRoomFromDomainToDb(validRoom));
+        rentRepository.saveRent(RentMapper.mapRentFromDomainToDb(validRent), validRent.getRoom().getNumber(), validRent.getGuest().getPersonalId());
+
+        assertDoesNotThrow(() -> rentRepository.endRent(UUID.fromString("bbcc4621-d88f-4a94-ae2f-b38072bf5087")));
+        assertFalse(RoomMapper.mapRoomFromDbToDomain(roomRepository.findRoomByNumber("12")).isRented());
+        assertFalse(RentMapper.mapRentFromDbToDomain(rentRepository.findRentByUuid(UUID.fromString("bbcc4621-d88f-4a94-ae2f-b38072bf5087"))).isActive());
+
+    }
+
+    @Test
+    public void rentRoomRaceTest() {
+        guestRepository.saveGuest(GuestMapper.mapGuestFromDomainToDb(validClient));
+        roomRepository.saveRoom(RoomMapper.mapRoomFromDomainToDb(validRoom));
+
+        AtomicInteger successCount = new AtomicInteger(0);
+        ConcurrentLinkedQueue<Exception> exceptions = new ConcurrentLinkedQueue<>();
+        CyclicBarrier barrier = new CyclicBarrier(2);
+
+        Runnable raceTask1 = () -> {
+            try {
+                barrier.await();
+                rentRepository.saveRent(RentMapper.mapRentFromDomainToDb(validRent), validRent.getRoom().getNumber(), validRent.getGuest().getPersonalId());
+                successCount.incrementAndGet();
+            } catch (Exception e) {
+                exceptions.add(e);
+            }
+        };
+
+        Runnable raceTask2 = () -> {
+            try {
+                barrier.await();
+                rentRepository.saveRent(RentMapper.mapRentFromDomainToDb(validRent2), validRent2.getRoom().getNumber(), validRent2.getGuest().getPersonalId());
+                successCount.incrementAndGet();
+            } catch (Exception e) {
+                exceptions.add(e);
+            }
+        };
+
+
+        CompletableFuture<Void> task1 = CompletableFuture.runAsync(raceTask1);
+        CompletableFuture<Void> task2 = CompletableFuture.runAsync(raceTask2);
+
+        CompletableFuture.allOf(task1, task2).join();
+
+        assertEquals(1, successCount.get());
+        assertEquals(1, exceptions.size());
+        assertInstanceOf(ConcurrentOperationException.class, exceptions.peek());
+    }
+
+    @Test
+    public void endRentRaceTest() {
+        guestRepository.saveGuest(GuestMapper.mapGuestFromDomainToDb(validClient));
+        roomRepository.saveRoom(RoomMapper.mapRoomFromDomainToDb(validRoom));
+        rentRepository.saveRent(RentMapper.mapRentFromDomainToDb(validRent), validRent.getRoom().getNumber(), validRent.getGuest().getPersonalId());
+
+        AtomicInteger successCount = new AtomicInteger(0);
+        ConcurrentLinkedQueue<Exception> exceptions = new ConcurrentLinkedQueue<>();
+        CyclicBarrier barrier = new CyclicBarrier(2);
+
+        Runnable raceTask = () -> {
+            try {
+                barrier.await();
+                rentRepository.endRent(UUID.fromString("bbcc4621-d88f-4a94-ae2f-b38072bf5087"));
+                successCount.incrementAndGet();
+            } catch (Exception e) {
+                exceptions.add(e);
+            }
+        };
+
+
+        CompletableFuture<Void> task1 = CompletableFuture.runAsync(raceTask);
+        CompletableFuture<Void> task2 = CompletableFuture.runAsync(raceTask);
+
+        CompletableFuture.allOf(task1, task2).join();
+
+        assertEquals(1, successCount.get());
+        assertEquals(1, exceptions.size());
+        assertInstanceOf(ConcurrentOperationException.class, exceptions.peek());
+    }
+
+    @Test
+    public void findRentByUUIDTest() {
+        guestRepository.saveGuest(GuestMapper.mapGuestFromDomainToDb(validClient));
+        roomRepository.saveRoom(RoomMapper.mapRoomFromDomainToDb(validRoom));
+        rentRepository.saveRent(RentMapper.mapRentFromDomainToDb(validRent), validRent.getRoom().getNumber(), validRent.getGuest().getPersonalId());
+        Rent foundRent = RentMapper.mapRentFromDbToDomain(rentRepository.findRentByUuid(UUID.fromString("bbcc4621-d88f-4a94-ae2f-b38072bf5087")));
+        assertNotNull(foundRent);
+        assertEquals(validRent, foundRent);
+    }
+
+    @Test
+    public void findInvalidRentByUUIDTest() {
+        guestRepository.saveGuest(GuestMapper.mapGuestFromDomainToDb(validClient));
+        roomRepository.saveRoom(RoomMapper.mapRoomFromDomainToDb(validRoom));
+        rentRepository.saveRent(RentMapper.mapRentFromDomainToDb(validRent), validRent.getRoom().getNumber(), validRent.getGuest().getPersonalId());
+
+        assertThrows(EntityNotFoundException.class, () -> rentRepository.findRentByUuid(UUID.fromString("bbcc6767-d88f-4a94-ae2f-b38072bf5087")));
+    }
+
+    @Test
+    public void findAllRentsTest() {
+        guestRepository.saveGuest(GuestMapper.mapGuestFromDomainToDb(validClient));
+        roomRepository.saveRoom(RoomMapper.mapRoomFromDomainToDb(validRoom));
+        roomRepository.saveRoom(RoomMapper.mapRoomFromDomainToDb(validRoom2));
+        rentRepository.saveRent(RentMapper.mapRentFromDomainToDb(validRent), validRent.getRoom().getNumber(), validRent.getGuest().getPersonalId());
+        rentRepository.saveRent(RentMapper.mapRentFromDomainToDb(validRent3), validRent3.getRoom().getNumber(), validRent3.getGuest().getPersonalId());
+
+        List<Rent> allRents = new ArrayList<>();
+
+        for (RentEnt rentEnt : rentRepository.findAllRents()) {
+            allRents.add(RentMapper.mapRentFromDbToDomain(rentEnt));
+        }
+
+        assertEquals(2, allRents.size());
+        assertTrue(allRents.contains(validRent));
+        assertTrue(allRents.contains(validRent3));
+
+    }
+
+    @Test
+    public void findGuestRentsTest() {
+        guestRepository.saveGuest(GuestMapper.mapGuestFromDomainToDb(validClient));
+        guestRepository.saveGuest(GuestMapper.mapGuestFromDomainToDb(validClient2));
+        roomRepository.saveRoom(RoomMapper.mapRoomFromDomainToDb(validRoom));
+        roomRepository.saveRoom(RoomMapper.mapRoomFromDomainToDb(validRoom2));
+        roomRepository.saveRoom(RoomMapper.mapRoomFromDomainToDb(validRoom3));
+        rentRepository.saveRent(RentMapper.mapRentFromDomainToDb(validRent), validRent.getRoom().getNumber(), validRent.getGuest().getPersonalId());
+        rentRepository.saveRent(RentMapper.mapRentFromDomainToDb(validRent3), validRent3.getRoom().getNumber(), validRent3.getGuest().getPersonalId());
+        rentRepository.saveRent(RentMapper.mapRentFromDomainToDb(validRent4), validRent4.getRoom().getNumber(), validRent4.getGuest().getPersonalId());
+
+        List<Rent> guest1Rents = new ArrayList<>();
+        List<Rent> guest2Rents = new ArrayList<>();
+
+        for (RentEnt rentEnt : rentRepository.findGuestRents(validClient.getPersonalId())) {
+            guest1Rents.add(RentMapper.mapRentFromDbToDomain(rentEnt));
+        }
+
+        for (RentEnt rentEnt : rentRepository.findGuestRents(validClient2.getPersonalId())) {
+            guest2Rents.add(RentMapper.mapRentFromDbToDomain(rentEnt));
+        }
+
+        assertEquals(2, guest1Rents.size());
+        assertTrue(guest1Rents.contains(validRent));
+        assertTrue(guest1Rents.contains(validRent3));
+
+        assertEquals(1, guest2Rents.size());
+        assertTrue(guest2Rents.contains(validRent4));
+
+    }
+
+    @Test
+    public void rentRepositoryOperationsAndRaceWhenPrimaryNodeIsDownTest() {
+        guestRepository.saveGuest(GuestMapper.mapGuestFromDomainToDb(validClient));
+        guestRepository.saveGuest(GuestMapper.mapGuestFromDomainToDb(validClient2));
+        roomRepository.saveRoom(RoomMapper.mapRoomFromDomainToDb(validRoom));
+
+        String stoppedPrimary = null;
+        try {
+            stoppedPrimary = stopPrimaryNode();
+
+            // 1. Wyścig dwóch wątków próbujących wynająć ten sam pokój po awarii Primary
+            AtomicInteger successCount = new AtomicInteger(0);
+            ConcurrentLinkedQueue<Exception> exceptions = new ConcurrentLinkedQueue<>();
+            CyclicBarrier barrier = new CyclicBarrier(2);
+
+            Runnable raceTask1 = () -> {
+                try {
+                    barrier.await();
+                    rentRepository.saveRent(RentMapper.mapRentFromDomainToDb(validRent), validRent.getRoom().getNumber(), validRent.getGuest().getPersonalId());
+                    successCount.incrementAndGet();
+                } catch (Exception e) {
+                    exceptions.add(e);
+                }
+            };
+
+            Runnable raceTask2 = () -> {
+                try {
+                    barrier.await();
+                    rentRepository.saveRent(RentMapper.mapRentFromDomainToDb(validRent2), validRent2.getRoom().getNumber(), validRent2.getGuest().getPersonalId());
+                    successCount.incrementAndGet();
+                } catch (Exception e) {
+                    exceptions.add(e);
+                }
+            };
+
+            CompletableFuture.allOf(
+                    CompletableFuture.runAsync(raceTask1),
+                    CompletableFuture.runAsync(raceTask2)
+            ).join();
+
+            assertEquals(1, successCount.get());
+            assertEquals(1, exceptions.size());
+            assertInstanceOf(ConcurrentOperationException.class, exceptions.peek());
+            assertTrue(roomRepository.findRoomByNumber("12").isRented());
+            assertEquals(1, rentRepository.findAllRents().size());
+        } finally {
+            startNode(stoppedPrimary);
+        }
+
+        // 2. Sprawdzenie spójności po powrocie węzła do klastra i zakończenie rezerwacji
+        assertEquals(1, rentRepository.findAllRents().size());
+        assertTrue(roomRepository.findRoomByNumber("12").isRented());
+
+        UUID activeRentUuid = rentRepository.findAllRents().getFirst().getUuid();
+        assertDoesNotThrow(() -> rentRepository.endRent(activeRentUuid));
+        assertFalse(roomRepository.findRoomByNumber("12").isRented());
+        assertFalse(rentRepository.findRentByUuid(activeRentUuid).isActive());
+    }
+
+}
