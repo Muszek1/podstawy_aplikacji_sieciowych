@@ -41,7 +41,7 @@ class MongoClientRepositoryAdapterTest extends AbstractDatabaseTest {
     @Test
     public void saveGuestTest() {
         assertDoesNotThrow(() -> adapter.saveGuest(validClient));
-        Client addedClient = adapter.findGuestByPersonalId("1234");
+        Client addedClient = adapter.findGuestByLogin("1234");
 
         assertEquals(validClient, addedClient);
     }
@@ -61,12 +61,12 @@ class MongoClientRepositoryAdapterTest extends AbstractDatabaseTest {
     @Test
     public void setGuestArchivedStatusTest() {
         adapter.saveGuest(validClient);
-        Client foundClient = adapter.findGuestByPersonalId("1234");
+        Client foundClient = adapter.findGuestByLogin("1234");
 
         assertFalse(foundClient.isArchived());
 
         assertDoesNotThrow(() -> adapter.setGuestArchivedStatus("1234", true));
-        foundClient =adapter.findGuestByPersonalId("1234");
+        foundClient =adapter.findGuestByLogin("1234");
 
         assertTrue(foundClient.isArchived());
     }
@@ -104,7 +104,7 @@ class MongoClientRepositoryAdapterTest extends AbstractDatabaseTest {
     public void findGuestByPersonalIdTest() {
         adapter.saveGuest(validClient);
 
-        Client foundClient = adapter.findGuestByPersonalId("1234");
+        Client foundClient = adapter.findGuestByLogin("1234");
         assertNotNull(foundClient);
         assertEquals(validClient, foundClient);
     }
@@ -112,7 +112,7 @@ class MongoClientRepositoryAdapterTest extends AbstractDatabaseTest {
     @Test
     public void findInvalidGuestByPersonalIdTest() {
         adapter.saveGuest(validClient);
-        assertThrows(EntityNotFoundException.class, () -> adapter.findGuestByPersonalId("1"));
+        assertThrows(EntityNotFoundException.class, () -> adapter.findGuestByLogin("1"));
     }
 
     @Test
@@ -140,13 +140,13 @@ class MongoClientRepositoryAdapterTest extends AbstractDatabaseTest {
             assertThrows(RepositoryException.class, () -> adapter.saveGuest(invalidClient2));
 
             assertDoesNotThrow(() -> adapter.setGuestArchivedStatus("1234", true));
-            assertTrue(adapter.findGuestByPersonalId("1234").isArchived());
+            assertTrue(adapter.findGuestByLogin("1234").isArchived());
         } finally {
             startNode(stoppedPrimary);
         }
 
         assertEquals(2, adapter.findAllGuests().size());
-        assertTrue(adapter.findGuestByPersonalId("1234").isArchived());
+        assertTrue(adapter.findGuestByLogin("1234").isArchived());
     }
 
 }

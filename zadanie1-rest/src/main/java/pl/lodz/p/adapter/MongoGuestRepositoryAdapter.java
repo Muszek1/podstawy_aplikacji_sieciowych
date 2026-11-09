@@ -27,7 +27,7 @@ public class MongoGuestRepositoryAdapter implements GuestRepositoryAdapterInterf
     }
 
     @Override
-    public Client findGuestByPersonalId(String personalId) {
+    public Client findGuestByLogin(String personalId) {
         UserEnt guestDoc = guestRepository.findGuestByPersonalId(personalId);
         return GuestMapper.mapGuestFromDbToDomain(guestDoc);
     }

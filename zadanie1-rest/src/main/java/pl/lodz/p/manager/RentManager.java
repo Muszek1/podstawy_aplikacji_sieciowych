@@ -56,7 +56,21 @@ public class RentManager {
         return adapter.findAllRents();
     }
 
-    public List<Rent> findAllGuestRents(String personalId) {
+    public List<Rent> findAllUserCurrentRents(String personalId) {
         return adapter.findAllGuestRents(personalId);
+    }
+    public List<Rent> findAllUserPreviousRents(String personalId) {
+        return adapter.findAllGuestRents(personalId);
+    }
+
+    public List<Rent> findAllRoomCurrentRents(String number) {
+        return adapter.findAllGuestRents(personalId);
+    }
+    public List<Rent> findAllRoomPreviousRents(String number) {
+        return adapter.findAllGuestRents(personalId);
+    }
+
+    public void deleteRent(UUID uuid) {
+
     }
 }

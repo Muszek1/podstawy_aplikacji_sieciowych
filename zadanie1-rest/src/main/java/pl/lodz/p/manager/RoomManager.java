@@ -18,7 +18,7 @@ public class RoomManager {
         adapter = new MongoRoomRepositoryAdapter(repository);
     }
 
-    public Room registerRoom(String number, int bedsAmount, double price) {
+    public Room createRoom(String number, int bedsAmount, double price) {
         try {
             adapter.findRoomByNumber(number);
         } catch (EntityNotFoundException _) {
@@ -27,6 +27,14 @@ public class RoomManager {
         }
 
         throw new UniqueValueException("Pokój o numerze = " + number + " już istnieje");
+    }
+
+    public void updateRoom(String number, , int bedsAmount, double price) {
+
+    }
+
+    public void deleteRoom(String number) {
+
     }
 
     public void unregisterRoom(String number) {

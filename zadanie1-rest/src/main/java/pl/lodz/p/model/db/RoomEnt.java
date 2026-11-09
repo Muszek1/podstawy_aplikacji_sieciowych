@@ -1,7 +1,9 @@
 package pl.lodz.p.model.db;
 
 import org.bson.codecs.pojo.annotations.BsonProperty;
+import org.springframework.data.mongodb.core.mapping.Document;
 
+@Document("Room")
 public class RoomEnt extends AbstractEntity {
 
     @BsonProperty("number")

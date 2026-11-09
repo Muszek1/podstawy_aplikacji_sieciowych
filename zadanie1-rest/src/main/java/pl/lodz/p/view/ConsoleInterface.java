@@ -1,6 +1,6 @@
 package pl.lodz.p.view;
 
-import pl.lodz.p.manager.GuestManager;
+import pl.lodz.p.manager.UserManager;
 import pl.lodz.p.manager.RentManager;
 import pl.lodz.p.manager.RoomManager;
 import pl.lodz.p.model.domain.Client;
@@ -15,15 +15,15 @@ import java.util.Scanner;
 import java.util.UUID;
 
 public class ConsoleInterface {
-    private final GuestManager guestManager;
+    private final UserManager userManager;
     private final RoomManager roomManager;
     private final RentManager rentManager;
     private final Scanner scanner;
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
-    public ConsoleInterface(GuestManager guestManager, RoomManager roomManager, RentManager rentManager) {
-        this.guestManager = guestManager;
+    public ConsoleInterface(UserManager userManager, RoomManager roomManager, RentManager rentManager) {
+        this.userManager = userManager;
         this.roomManager = roomManager;
         this.rentManager = rentManager;
         this.scanner = new Scanner(System.in);
@@ -229,7 +229,7 @@ public class ConsoleInterface {
         };
 
         try {
-            guestManager.registerGuest(firstName, lastName, personalId, city, street, number, guestTypeStr);
+            userManager.createUser(firstName, lastName, personalId, city, street, number, guestTypeStr);
             System.out.println("Gość został pomyślnie zarejestrowany.");
         } catch (RuntimeException e) {
             System.err.println("Błąd: " + e.getMessage());
@@ -240,7 +240,7 @@ public class ConsoleInterface {
         displayTitle("WYREJESTROWANIE GOŚCIA");
         try {
             String personalId = readNonEmptyString("PESEL / ID osobiste: ");
-            guestManager.unregisterGuest(personalId);
+            userManager.archiveUser(personalId);
             System.out.println("Gość został pomyślnie wyrejestrowany!");
         } catch (IllegalArgumentException e) {
             System.err.println("Wyrejestrowanie gościa zostało przerwane!");
@@ -253,7 +253,7 @@ public class ConsoleInterface {
         displayTitle("AKTYWACJA GOŚCIA");
         try {
             String personalId = readNonEmptyString("PESEL / ID osobiste: ");
-            guestManager.activateGuest(personalId);
+            userManager.activateUser(personalId);
             System.out.println("Gość został pomyślnie aktywowany!");
         } catch (IllegalArgumentException e) {
             System.err.println("Aktywacja gościa została przerwana!");
@@ -265,7 +265,7 @@ public class ConsoleInterface {
     private void displayAllGuests() {
         displayTitle("INFORMACJE O WSZYSTKICH GOŚCIACH");
         try {
-            List<Client> clients = guestManager.findAllGuests();
+            List<Client> clients = userManager.findAllGuests();
             if (clients.isEmpty()) {
                 System.out.println("Brak zarejestrowanych gości.");
                 return;
@@ -282,7 +282,7 @@ public class ConsoleInterface {
         displayTitle("INFORMACJE O WYBRANYM GOŚCIU");
         try {
             String personalId = readNonEmptyString("PESEL / ID osobiste: ");
-            Client client = guestManager.findGuestByPersonalId(personalId);
+            Client client = userManager.findUserByLogin(personalId);
             System.out.println(client + "\n---");
         } catch (IllegalArgumentException e) {
             System.err.println("Wyświetlanie informacji o gościu zostało przerwane!");
@@ -349,7 +349,7 @@ public class ConsoleInterface {
         }
 
         try {
-            roomManager.registerRoom(number, bedsAmount, basePrice);
+            roomManager.createRoom(number, bedsAmount, basePrice);
             System.out.println("Pokój został pomyślnie zarejestrowany.");
         } catch (RuntimeException e) {
             System.err.println("Błąd: " + e.getMessage());
@@ -455,7 +455,7 @@ public class ConsoleInterface {
         }
 
         try {
-            Client client = guestManager.findGuestByPersonalId(personalId);
+            Client client = userManager.findUserByLogin(personalId);
             Room room = roomManager.findRoomByNumber(roomNumber);
             Rent rent = rentManager.rentRoom(beginTime, endTime, client, room);
             System.out.println("Pokój został pomyślnie wypożyczony! Szczegóły wypożyczenia:\n" + rent);
@@ -510,7 +510,7 @@ public class ConsoleInterface {
         displayTitle("INFORMACJE O WYPOŻYCZENIACH GOŚCIA");
         try {
             String personalId = readNonEmptyString("PESEL / ID osobiste gościa: ");
-            List<Rent> rents = rentManager.findAllGuestRents(personalId);
+            List<Rent> rents = rentManager.findAllUserActiveRents(personalId);
             if (rents.isEmpty()) {
                 System.out.println("Brak wypożyczeń dla gościa o ID = " + personalId);
                 return;

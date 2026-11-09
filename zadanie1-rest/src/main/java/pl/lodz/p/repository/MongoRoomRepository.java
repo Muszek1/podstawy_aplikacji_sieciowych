@@ -5,6 +5,7 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
 import com.mongodb.client.result.UpdateResult;
+import org.springframework.data.mongodb.repository.MongoRepository;
 import pl.lodz.p.exception.ConcurrentOperationException;
 import pl.lodz.p.exception.EntityNotFoundException;
 import pl.lodz.p.exception.RepositoryException;

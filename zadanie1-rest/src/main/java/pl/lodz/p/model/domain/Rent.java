@@ -20,6 +20,13 @@ public class Rent {
         this.room = Objects.requireNonNull(room);
    }
 
+    public Rent(UUID uuid, LocalDateTime beginTime, Client client, Room room) {
+        this.uuid = Objects.requireNonNull(uuid);
+        this.beginTime = Objects.requireNonNull(beginTime);
+        this.client = Objects.requireNonNull(client);
+        this.room = Objects.requireNonNull(room);
+    }
+
     public LocalDateTime getBeginTime() {
         return beginTime;
     }

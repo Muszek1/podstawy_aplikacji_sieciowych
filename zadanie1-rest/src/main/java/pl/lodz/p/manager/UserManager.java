@@ -11,19 +11,18 @@ import pl.lodz.p.repository.MongoGuestRepository;
 
 import java.util.List;
 
-public class GuestManager {
+public class UserManager {
     private final GuestRepositoryAdapterInterface adapter;
 
-    public GuestManager(MongoDatabase database) {
+    public UserManager(MongoDatabase database) {
         MongoGuestRepository repository = new MongoGuestRepository(database);
         this.adapter = new MongoGuestRepositoryAdapter(repository);
     }
 
-    public Client registerGuest(String firstName, String lastName, String personalId, String city, String street, String number, String guestTypeName) {
+    public Client createUser(String firstName, String lastName, String personalId, String city, String street, String number, String userType) {
         try {
-            adapter.findGuestByPersonalId(personalId);
+            adapter.findGuestByLogin(personalId);
         } catch (EntityNotFoundException _) {
-            Address address = new Address(city, street, number);
             GuestType guestType = mapNameToGuestType(guestTypeName);
             Client client = new Client(firstName, lastName, personalId, address, guestType);
             return adapter.saveGuest(client);
@@ -32,21 +31,26 @@ public class GuestManager {
         throw new UniqueValueException("Gość o personalId = " + personalId + " już istnieje");
     }
 
-    public GuestManager(GuestRepositoryAdapterInterface adapter) {
+    public void updateUser(String login, String firstName, String lastName) {
+
+    }
+
+    public UserManager(GuestRepositoryAdapterInterface adapter) {
         this.adapter = adapter;
     }
 
-    public void unregisterGuest(String personalId) {
+    public void archiveUser(String personalId) {
         adapter.setGuestArchivedStatus(personalId, true);
     }
 
-    public void activateGuest(String personalId) {
+    public void activateUser(String personalId) {
         adapter.setGuestArchivedStatus(personalId, false);
     }
 
-    public Client findGuestByPersonalId(String personalId) {
-        return adapter.findGuestByPersonalId(personalId);
+    public User findUserByLogin(String login) {
+        return adapter.findGuestByLogin(login);
     }
+    public List<User> findUsersByMatchingLogin(String loginToMatch) {return null;}
 
     public List<Client> findAllGuests() {
         return adapter.findAllGuests();
