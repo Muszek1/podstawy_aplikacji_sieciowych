@@ -1,20 +1,18 @@
 package pl.lodz.p.model.domain;
 
-import java.util.Objects;
-import java.util.UUID;
+import org.springframework.data.annotation.Id;
+
 
 public class Room {
+    @Id
     private final String number;
     private int bedsAmount;
     private double price;
-    private boolean rented;
-    private final UUID uuid;
 
-    public Room(UUID uuid, String number, int bedsAmount, double price) {
+    public Room(String number, int bedsAmount, double price) {
         this.number = number;
         this.bedsAmount = bedsAmount;
         this.price = price;
-        this.uuid = Objects.requireNonNull(uuid);
     }
 
     public void setBasePrice(double price) {
@@ -35,26 +33,13 @@ public class Room {
         return price;
     }
 
-    public boolean isRented() {
-        return rented;
-    }
-
-    public void setRented(boolean rented) {
-        this.rented = rented;
-    }
-
-    public UUID getUuid() {
-        return uuid;
-    }
 
     @Override
     public String toString() {
         return "Room: " +
-                "UUID: '" + uuid + '\'' + '\n' +
                 "number: '" + number + '\'' + '\n' +
                 "bedsAmount: " + bedsAmount + '\n' +
-                "price: " + price + '\n' +
-                "rented: " + rented + '\n';
+                "price: " + price + '\n';
     }
 
     @Override
@@ -62,11 +47,11 @@ public class Room {
         if (this == object) return true;
         if (object == null || getClass() != object.getClass()) return false;
         Room other = (Room) object;
-        return uuid.equals(other.uuid);
+        return number.equals(other.number);
     }
 
     @Override
     public int hashCode() {
-        return uuid.hashCode();
+        return number.hashCode();
     }
 }

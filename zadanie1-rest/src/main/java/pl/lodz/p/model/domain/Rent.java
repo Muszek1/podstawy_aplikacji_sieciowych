@@ -1,28 +1,37 @@
 package pl.lodz.p.model.domain;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.DocumentReference;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 import java.util.UUID;
 
+@Document(collection = "rents")
 public class Rent {
     private final LocalDateTime beginTime;
     private LocalDateTime endTime;
+
+    @DocumentReference(lazy = true)
     private final Client client;
+
+    @DocumentReference(lazy = true)
     private final Room room;
+
+    @Id
     private final UUID uuid;
+
+    public Rent(UUID uuid, LocalDateTime beginTime, Client client, Room room) {
+        this.uuid = Objects.requireNonNull(uuid);
+        this.beginTime = Objects.requireNonNull(beginTime);
+        this.client = Objects.requireNonNull(client);
+        this.room = Objects.requireNonNull(room);
+    }
 
     public Rent(UUID uuid, LocalDateTime beginTime, LocalDateTime endTime, Client client, Room room) {
         this.uuid = Objects.requireNonNull(uuid);
         this.beginTime = Objects.requireNonNull(beginTime);
         this.endTime = endTime;
-        this.client = Objects.requireNonNull(client);
-        this.room = Objects.requireNonNull(room);
-   }
-
-    public Rent(UUID uuid, LocalDateTime beginTime, Client client, Room room) {
-        this.uuid = Objects.requireNonNull(uuid);
-        this.beginTime = Objects.requireNonNull(beginTime);
         this.client = Objects.requireNonNull(client);
         this.room = Objects.requireNonNull(room);
     }

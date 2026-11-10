@@ -1,16 +1,15 @@
 package pl.lodz.p.adapter;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.Query;
 import pl.lodz.p.model.db.RoomEnt;
 import pl.lodz.p.model.domain.Room;
 
 import java.util.List;
+import java.util.Optional;
 
-public interface RoomRepositoryAdapterInterface extends MongoRepository<RoomEnt, String> {
-//    Room saveRoom(Room room);
-    void setRoomArchivedStatus(String number, boolean isArchived);
+public interface RoomRepositoryAdapterInterface extends MongoRepository<Room, String> {
 
-    Room findRoomByNumber(String number);
-    List<Room> findAllRooms();
+    Optional<Room> findByNumber(String number);
+    boolean existsByNumber(String number);
+    List<Room> findByRented(boolean rented);
 }

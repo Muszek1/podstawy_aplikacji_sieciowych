@@ -1,56 +1,51 @@
 package pl.lodz.p.manager;
 
+import org.springframework.stereotype.Service;
+import pl.lodz.p.adapter.RoomRepositoryAdapterInterface;
 
-import com.mongodb.client.MongoDatabase;
-import pl.lodz.p.adapter.MongoRoomRepositoryAdapter;
 import pl.lodz.p.exception.EntityNotFoundException;
 import pl.lodz.p.exception.UniqueValueException;
 import pl.lodz.p.model.domain.*;
-import pl.lodz.p.repository.MongoRoomRepository;
+
 
 import java.util.List;
 
+@Service
 public class RoomManager {
-    private final MongoRoomRepositoryAdapter adapter;
+    private final RoomRepositoryAdapterInterface adapter;
 
-    public RoomManager(MongoDatabase database) {
-        MongoRoomRepository repository = new MongoRoomRepository(database);
-        adapter = new MongoRoomRepositoryAdapter(repository);
+    public RoomManager(RoomRepositoryAdapterInterface repository) {
+        this.adapter = repository;
     }
 
-    public Room createRoom(String number, int bedsAmount, double price) {
-        try {
-            adapter.findRoomByNumber(number);
-        } catch (EntityNotFoundException _) {
-            Room room = new Room(number, bedsAmount, price);
-            return adapter.saveRoom(room);
+    public Room createRoom(Room room) {
+        if (adapter.existsByNumber(room.getNumber())) {
+            throw new UniqueValueException("Pokój o numerze " + room.getNumber() + " już istnieje");
         }
 
-        throw new UniqueValueException("Pokój o numerze = " + number + " już istnieje");
+        return adapter.save(room);
     }
 
-    public void updateRoom(String number, , int bedsAmount, double price) {
+    public void updateRoom(Room externalRoom) {
+        Room actualRoom = findRoomByNumber(externalRoom.getNumber());
 
+        actualRoom.setBedsAmount(externalRoom.getBedsAmount());
+        actualRoom.setBasePrice(externalRoom.getBasePrice());
+
+        adapter.save(actualRoom);
     }
 
-    public void deleteRoom(String number) {
-
-    }
-
-    public void unregisterRoom(String number) {
-        adapter.setRoomArchivedStatus(number, true);
-    }
-
-    public void activateRoom(String number) {
-        adapter.setRoomArchivedStatus(number, false);
-    }
 
     public Room findRoomByNumber(String number) {
-        return adapter.findRoomByNumber(number);
+        return adapter.findByNumber(number)
+                .orElseThrow(() -> new EntityNotFoundException("Nie znaleziono pokoju o numerze: " + number));
     }
 
     public List<Room> findAllRooms() {
-        return adapter.findAllRooms();
+        return adapter.findAll();
     }
 
+    public List<Room> findAvailableRooms() {
+        return adapter.findByRented(false);
+    }
 }

@@ -1,20 +1,20 @@
 package pl.lodz.p.model.domain;
 
+import org.springframework.data.annotation.Id;
+
 import java.util.Objects;
 import java.util.UUID;
 
 public abstract class User {
-
-    private final UUID uuid;
+    @Id
     private String login;
     private String firstName;
     private String lastName;
     private boolean active;
 
 
-    public User(UUID uuid, String login, String firstName, String lastName, boolean active) {
+    public User(String login, String firstName, String lastName, boolean active) {
 
-        this.uuid = Objects.requireNonNull(uuid);
 
         if (login == null || login.isBlank()) {
             throw new IllegalArgumentException("login cannot be null or blank");
@@ -24,11 +24,6 @@ public abstract class User {
         this.firstName = firstName;
         this.lastName = lastName;
         this.active = active;
-    }
-
-
-    public UUID getUuid() {
-        return uuid;
     }
 
 
@@ -73,12 +68,12 @@ public abstract class User {
     public final boolean equals(Object object) {
         if (this == object) return true;
         if (!(object instanceof User other)) return false;
-        return uuid.equals(other.uuid);
+        return login.equals(other.login);
     }
 
     @Override
     public final int hashCode() {
-        return uuid.hashCode();
+        return login.hashCode();
     }
 
 }

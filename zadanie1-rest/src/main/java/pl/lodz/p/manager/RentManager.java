@@ -1,76 +1,63 @@
 package pl.lodz.p.manager;
 
-import com.mongodb.client.MongoDatabase;
-import pl.lodz.p.adapter.MongoRentRepositoryAdapter;
+import org.springframework.stereotype.Service;
 import pl.lodz.p.adapter.RentRepositoryAdapterInterface;
-import pl.lodz.p.exception.BusinessLogicException;
-import pl.lodz.p.exception.InvalidValueException;
+import pl.lodz.p.adapter.RoomRepositoryAdapterInterface;
+import pl.lodz.p.adapter.UserRepositoryAdapterInterface;
+import pl.lodz.p.exception.EntityNotFoundException;
 import pl.lodz.p.model.domain.Client;
 import pl.lodz.p.model.domain.Rent;
 import pl.lodz.p.model.domain.Room;
-import pl.lodz.p.repository.MongoRentRepository;
+import pl.lodz.p.model.domain.User;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+@Service
 public class RentManager {
-    private final RentRepositoryAdapterInterface adapter;
+    private final RentRepositoryAdapterInterface rentRepository;
+    private final UserRepositoryAdapterInterface userRepository;
+    private final RoomRepositoryAdapterInterface roomRepository;
 
-    public RentManager(MongoDatabase database) {
-        MongoRentRepository repository = new MongoRentRepository(database);
-        this.adapter = new MongoRentRepositoryAdapter(repository);
+    public RentManager(RentRepositoryAdapterInterface rentRepository, UserRepositoryAdapterInterface userRepository, RoomRepositoryAdapterInterface roomRepository) {
+        this.rentRepository = rentRepository;
+        this.userRepository = userRepository;
+        this.roomRepository = roomRepository;
     }
 
-    public RentManager(RentRepositoryAdapterInterface adapter) {
-        this.adapter = adapter;
-    }
-
-    public Rent rentRoom(LocalDateTime beginTime, LocalDateTime endTime, Client client, Room room) {
-        if (endTime.isBefore(beginTime)) {
-            throw new InvalidValueException("Data zakończenia: " + endTime + " nie może być wcześniej niż data rozpoczęcia: " + beginTime);
+    public Rent createRent(String clientLogin, String roomNumber) {
+        if (rentRepository.existsByRoomNumberAndEndTimeIsNull(roomNumber)) {
+            throw new IllegalStateException("Pokój " + roomNumber + " jest już wynajęty.");
         }
 
-        if (client.isArchived()) {
-            throw new BusinessLogicException("Gość o personalId = " + client.getPersonalId() + " jest zarchiwizowany");
+        User user = userRepository.findById(clientLogin)
+                .orElseThrow(() -> new EntityNotFoundException("Nie znaleziono klienta o loginie: " + clientLogin));
+
+        if (!(user instanceof Client client)) {
+            throw new IllegalArgumentException("Pokój może wynająć tylko klient.");
         }
 
-        if (room.isRented() || room.isArchived()) {
-            throw new BusinessLogicException("Pokój o numerze = " + room.getNumber() + " jest już wypożyczony lub zarchiwizowany");
-        }
+        Room room = roomRepository.findById(roomNumber)
+                .orElseThrow(() -> new EntityNotFoundException("Nie znaleziono pokoju o numerze: " + roomNumber));
 
-        Rent rent = new Rent(beginTime, endTime, client, room);
-
-        return adapter.saveRent(rent);
+        Rent rent = new Rent(UUID.randomUUID(), LocalDateTime.now(), client, room);
+        return rentRepository.save(rent);
     }
 
-    public void endRent(UUID uuid) {
-        adapter.endRent(uuid);
+    public void endRent(String roomNumber) {
+        Rent activeRent = rentRepository.findByRoomNumberAndEndTimeIsNull(roomNumber)
+                .orElseThrow(() -> new EntityNotFoundException("Pokój " + roomNumber + " nie jest aktualnie wynajęty."));
+
+        activeRent.setEndTime(LocalDateTime.now());
+        rentRepository.save(activeRent);
     }
 
-    public Rent findRentByUuid(UUID uuid) {
-        return adapter.findRentByUuid(uuid);
+    public List<Rent> getClientRents(String clientLogin) {
+        return rentRepository.findByClientLogin(clientLogin);
     }
 
-    public List<Rent> findAllRents() {
-        return adapter.findAllRents();
-    }
-
-    public List<Rent> findAllUserCurrentRents(String personalId) {
-        return adapter.findAllGuestRents(personalId);
-    }
-    public List<Rent> findAllUserPreviousRents(String personalId) {
-        return adapter.findAllGuestRents(personalId);
-    }
-
-    public List<Rent> findAllRoomCurrentRents(String number) {
-        return adapter.findAllGuestRents(personalId);
-    }
-    public List<Rent> findAllRoomPreviousRents(String number) {
-        return adapter.findAllGuestRents(personalId);
-    }
-
-    public void deleteRent(UUID uuid) {
-
+    public List<Rent> getAllRents() {
+        return rentRepository.findAll();
     }
 }

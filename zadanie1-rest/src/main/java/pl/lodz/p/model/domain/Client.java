@@ -1,11 +1,10 @@
 package pl.lodz.p.model.domain;
 
-import java.util.UUID;
+import org.springframework.data.annotation.TypeAlias;
 
+@TypeAlias("client")
 public class Client extends User {
-
-
-    public Client(UUID uuid, String login, String firstName, String lastName, boolean active) {
-        super(uuid, login, firstName, lastName, active);
+    public Client(String login, String firstName, String lastName, boolean active) {
+        super(login, firstName, lastName, active);
     }
 }
