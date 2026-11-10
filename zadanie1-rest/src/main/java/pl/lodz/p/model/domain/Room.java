@@ -3,17 +3,31 @@ package pl.lodz.p.model.domain;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.Objects;
+import java.util.UUID;
+
 @Document
 public class Room {
     @Id
+    private UUID uuid;
     private final String number;
     private int bedsAmount;
     private double price;
 
-    public Room(String number, int bedsAmount, double price) {
+    public Room(String number, UUID uuid, int bedsAmount, double price) {
+
+        this.uuid = Objects.requireNonNull(uuid, "uuid cannot be null");
         this.number = number;
         this.bedsAmount = bedsAmount;
         this.price = price;
+    }
+
+    public UUID getUuid() {
+        return uuid;
+    }
+
+    public double getPrice() {
+        return price;
     }
 
     public void setBasePrice(double price) {
@@ -48,11 +62,11 @@ public class Room {
         if (this == object) return true;
         if (object == null || getClass() != object.getClass()) return false;
         Room other = (Room) object;
-        return number.equals(other.number);
+        return uuid.equals(other.uuid);
     }
 
     @Override
     public int hashCode() {
-        return number.hashCode();
+        return uuid.hashCode();
     }
 }

@@ -7,25 +7,30 @@ import java.util.UUID;
 
 public abstract class User {
     @Id
+    private UUID uuid;
     private String login;
     private String firstName;
     private String lastName;
     private boolean active;
 
 
-    public User(String login, String firstName, String lastName, boolean active) {
+    public User(UUID uuid, String login, String firstName, String lastName, boolean active) {
 
 
         if (login == null || login.isBlank()) {
             throw new IllegalArgumentException("login cannot be null or blank");
         }
 
+        this.uuid = Objects.requireNonNull(uuid, "uuid cannot be null");
         this.login = login;
         this.firstName = firstName;
         this.lastName = lastName;
         this.active = active;
     }
 
+    public UUID getUuid() {
+        return uuid;
+    }
 
     public String getLogin() {
         return login;
@@ -68,12 +73,12 @@ public abstract class User {
     public final boolean equals(Object object) {
         if (this == object) return true;
         if (!(object instanceof User other)) return false;
-        return login.equals(other.login);
+        return uuid.equals(other.uuid);
     }
 
     @Override
     public final int hashCode() {
-        return login.hashCode();
+        return uuid.hashCode();
     }
 
 }
