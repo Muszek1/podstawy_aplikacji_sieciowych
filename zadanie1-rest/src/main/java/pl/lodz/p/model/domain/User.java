@@ -7,7 +7,7 @@ import java.util.UUID;
 
 public abstract class User {
     @Id
-    private UUID uuid;
+    private final UUID uuid;
     private String login;
     private String firstName;
     private String lastName;
@@ -15,7 +15,6 @@ public abstract class User {
 
 
     public User(UUID uuid, String login, String firstName, String lastName, boolean active) {
-
 
         if (login == null || login.isBlank()) {
             throw new IllegalArgumentException("login cannot be null or blank");

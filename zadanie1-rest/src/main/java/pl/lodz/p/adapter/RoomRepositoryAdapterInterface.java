@@ -6,8 +6,9 @@ import pl.lodz.p.model.domain.Room;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
-public interface RoomRepositoryAdapterInterface extends MongoRepository<Room, String> {
+public interface RoomRepositoryAdapterInterface extends MongoRepository<Room, UUID> {
 
     Room findByNumber(String number);
     boolean existsByNumber(String number);

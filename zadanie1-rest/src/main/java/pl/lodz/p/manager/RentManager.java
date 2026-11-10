@@ -26,20 +26,24 @@ public class RentManager {
         this.roomRepository = roomRepository;
     }
 
-    public Rent createRent(String clientLogin, String roomNumber) {
-        if (rentRepository.existsByRoomNumberAndEndTimeIsNull(roomNumber)) {
-            throw new IllegalStateException("Pokój " + roomNumber + " jest już wynajęty.");
-        }
+    public Rent createRent(UUID clientUuid, UUID roomUuid){
 
-        User user = userRepository.findById(clientLogin)
-                .orElseThrow(() -> new EntityNotFoundException("Nie znaleziono klienta o loginie: " + clientLogin));
+        User user = userRepository.findById(clientUuid)
+                .orElseThrow(() -> new EntityNotFoundException("Nie znaleziono klienta o uuid: " + clientUuid));
 
         if (!(user instanceof Client client)) {
             throw new IllegalArgumentException("Pokój może wynająć tylko klient.");
         }
 
-        Room room = roomRepository.findById(roomNumber)
-                .orElseThrow(() -> new EntityNotFoundException("Nie znaleziono pokoju o numerze: " + roomNumber));
+        Room room = roomRepository.findById(roomUuid)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Nie znaleziono pokoju o UUID: " + roomUuid));
+
+        if (rentRepository.existsByRoomNumberAndEndTimeIsNull(
+                room.getNumber())) {
+            throw new IllegalStateException(
+                    "Pokój " + room.getNumber() + " jest już wynajęty.");
+        }
 
         Rent rent = new Rent(UUID.randomUUID(), LocalDateTime.now(), client, room);
         return rentRepository.save(rent);

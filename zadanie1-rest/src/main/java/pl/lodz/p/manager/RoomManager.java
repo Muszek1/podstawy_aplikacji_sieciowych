@@ -10,6 +10,7 @@ import pl.lodz.p.model.domain.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class RoomManager {
@@ -28,7 +29,7 @@ public class RoomManager {
     }
 
     public void updateRoom(Room externalRoom) {
-        Room actualRoom = findRoomByNumber(externalRoom.getNumber());
+        Room actualRoom = findRoomByUuid(externalRoom.getUuid());
 
         actualRoom.setBedsAmount(externalRoom.getBedsAmount());
         actualRoom.setBasePrice(externalRoom.getBasePrice());
@@ -40,6 +41,12 @@ public class RoomManager {
     public Room findRoomByNumber(String number) {
         return adapter.findByNumber(number);
                 //.orElseThrow(() -> new EntityNotFoundException("Nie znaleziono pokoju o numerze: " + number));
+    }
+
+    public Room findRoomByUuid(UUID uuid) {
+        return adapter.findById(uuid)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Nie znaleziono pokoju o UUID: " + uuid));
     }
 
     public List<Room> findAllRooms() {

@@ -8,6 +8,7 @@ import pl.lodz.p.exception.UniqueValueException;
 import pl.lodz.p.model.domain.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class UserManager {
@@ -22,24 +23,24 @@ public class UserManager {
     }
 
     public void updateUser(User user) {
-        User exisitingUser = findUserByLogin(user.getLogin());
-        exisitingUser.setFirstName(user.getFirstName());
-        exisitingUser.setLastName(user.getLastName());
-        adapter.save(exisitingUser);
+        User existingUser = findUserByUuid(user.getUuid());
+        existingUser.setFirstName(user.getFirstName());
+        existingUser.setLastName(user.getLastName());
+        adapter.save(existingUser);
     }
 
     public UserManager(UserRepositoryAdapterInterface adapter) {
         this.adapter = adapter;
     }
 
-    public void archiveUser(String login) {
-        User user = findUserByLogin(login);
+    public void archiveUser(UUID uuid) {
+        User user = findUserByUuid(uuid);
         user.setActive(false);
         adapter.save(user);
     }
 
-    public void activateUser(String login) {
-        User user = findUserByLogin(login);
+    public void activateUser(UUID uuid) {
+        User user = findUserByUuid(uuid);
         user.setActive(true);
         adapter.save(user);
     }
@@ -48,6 +49,12 @@ public class UserManager {
         return adapter.findByLogin(login)
                 .orElseThrow(() -> new EntityNotFoundException("Nie znaleziono użytkownika o loginie: " + login));
     }
+    public User findUserByUuid(UUID uuid) {
+        return adapter.findById(uuid)
+                .orElseThrow(() -> new EntityNotFoundException("Nie znaleziono użytkownika o uuid: " + uuid));
+    }
+
+
 
     public List<User> findUsersByMatchingLogin(String loginToMatch) {
         return adapter.findByLoginContainingIgnoreCase(loginToMatch);
