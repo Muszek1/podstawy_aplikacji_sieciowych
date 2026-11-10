@@ -1,8 +1,9 @@
 package pl.lodz.p.model.domain;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-
+@Document
 public class Room {
     @Id
     private final String number;

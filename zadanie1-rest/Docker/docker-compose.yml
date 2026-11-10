@@ -1,15 +1,18 @@
 services:
   mongodb:
-    image: mongo:latest
-    container_name: pas-zad1
-    ports:
-      - "27017:27017"
+    image: mongodb/mongodb-atlas-local
+    hostname: mongodb
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=pas
-      - MONGO_INITDB_ROOT_PASSWORD=Zaq1@3
-      - MONGO_INITDB_DATABASE=pasdb
+      - MONGODB_INITDB_ROOT_USERNAME=pas
+      - MONGODB_INITDB_ROOT_PASSWORD=Zaq123
+    ports:
+      - 27017:27017
     volumes:
-      - mongo_data:/data/db
-
+      - ./init:/docker-entrypoint-initdb.d
+      - db:/data/db
+      - configdb:/data/configdb
+      - mongot:/data/mongot
 volumes:
-  mongo_data:
+  db:
+  configdb:
+  mongot:

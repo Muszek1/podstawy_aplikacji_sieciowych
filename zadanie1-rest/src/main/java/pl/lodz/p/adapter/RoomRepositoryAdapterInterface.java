@@ -9,7 +9,7 @@ import java.util.Optional;
 
 public interface RoomRepositoryAdapterInterface extends MongoRepository<Room, String> {
 
-    Optional<Room> findByNumber(String number);
+    Room findByNumber(String number);
     boolean existsByNumber(String number);
-    List<Room> findByRented(boolean rented);
+
 }

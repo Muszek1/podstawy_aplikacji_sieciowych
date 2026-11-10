@@ -9,6 +9,7 @@ import pl.lodz.p.model.domain.*;
 
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class RoomManager {
@@ -37,15 +38,20 @@ public class RoomManager {
 
 
     public Room findRoomByNumber(String number) {
-        return adapter.findByNumber(number)
-                .orElseThrow(() -> new EntityNotFoundException("Nie znaleziono pokoju o numerze: " + number));
+        return adapter.findByNumber(number);
+                //.orElseThrow(() -> new EntityNotFoundException("Nie znaleziono pokoju o numerze: " + number));
     }
 
     public List<Room> findAllRooms() {
         return adapter.findAll();
     }
 
-    public List<Room> findAvailableRooms() {
-        return adapter.findByRented(false);
+    public void deleteRoom(String number) {
+        try {
+            Room room = adapter.findByNumber(number);
+            adapter.delete(room);
+        } catch (Exception e) {
+
+        }
     }
 }
