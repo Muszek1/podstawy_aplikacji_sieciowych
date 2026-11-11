@@ -3,7 +3,8 @@ package pl.lodz.p.model.domain;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceCreator;
 import org.springframework.data.annotation.Version;
@@ -22,10 +23,10 @@ public class Room {
     @Indexed(unique = true)
     private String number;
 
-    @NotNull
+    @Positive
     private int bedsAmount;
 
-    @NotNull
+    @PositiveOrZero
     private double price;
 
     @Version

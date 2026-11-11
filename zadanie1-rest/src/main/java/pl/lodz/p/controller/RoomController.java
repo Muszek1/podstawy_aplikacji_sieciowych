@@ -1,7 +1,7 @@
 package pl.lodz.p.controller;
 
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.lodz.p.manager.RoomManager;
 import pl.lodz.p.model.domain.Room;
@@ -28,9 +28,14 @@ class RoomController {
         return roomManager.findRoomByNumber(number);
     }
 
+    @GetMapping("/rooms/{uuid}")
+    public Room getByUuid(@PathVariable UUID uuid) {
+        return roomManager.findRoomByUuid(uuid);
+    }
+
     @PutMapping("/room/{uuid}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void updateRoom(@RequestBody Room updatedRoom, @PathVariable UUID uuid) {
+    public void updateRoom(@Valid @RequestBody Room updatedRoom, @PathVariable UUID uuid) {
         roomManager.updateRoom(updatedRoom, uuid);
     }
 
@@ -42,7 +47,7 @@ class RoomController {
 
     @PostMapping("/rooms")
     @ResponseStatus(HttpStatus.CREATED)
-    public Room addRoom(@RequestBody Room newRoom) {
+    public Room addRoom(@Valid @RequestBody Room newRoom) {
         return roomManager.createRoom(newRoom);
     }
 }
