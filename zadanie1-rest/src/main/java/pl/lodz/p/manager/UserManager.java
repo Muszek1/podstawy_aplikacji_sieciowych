@@ -3,6 +3,7 @@ package pl.lodz.p.manager;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import pl.lodz.p.adapter.UserRepositoryAdapterInterface;
+import pl.lodz.p.exception.BusinessLogicException;
 import pl.lodz.p.exception.EntityNotFoundException;
 import pl.lodz.p.exception.UniqueValueException;
 import pl.lodz.p.model.domain.*;
@@ -21,12 +22,6 @@ public class UserManager {
             String lastName,
             boolean active) {
 
-        if (adapter.existsByLogin(login)) {
-            throw new UniqueValueException(
-                    "Użytkownik o loginie " + login + " już istnieje"
-            );
-        }
-
         try {
             return adapter.create(
                     userType, login, firstName, lastName, active
@@ -38,8 +33,12 @@ public class UserManager {
         }
     }
 
-    public void updateUser(UUID uuid, String firstName, String lastName) {
+    public void updateUser(UUID uuid, String firstName, String lastName, Long expectedVersion) {
         User user = findUserByUuid(uuid);
+
+        if (!user.getVersion().equals(expectedVersion)) {
+            throw new BusinessLogicException("Obiekt został w międzyczasie zmodyfikowany przez kogoś innego (konflikt wersji)");
+        }
 
         user.setFirstName(firstName);
         user.setLastName(lastName);

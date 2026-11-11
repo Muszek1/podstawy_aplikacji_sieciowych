@@ -3,6 +3,7 @@ package pl.lodz.p.controller;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.annotation.RequestScope;
 import pl.lodz.p.manager.UserManager;
 import pl.lodz.p.model.domain.Client;
 import pl.lodz.p.model.domain.ResourceAdministrator;
@@ -14,6 +15,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/users")
+@RequestScope
 public class UserController {
 
     private final UserManager userManager;
@@ -55,7 +57,7 @@ public class UserController {
         );
     }
 
-    @PostMapping("/resourceAdministators")
+    @PostMapping("/resourceAdministrators")
     @ResponseStatus(HttpStatus.CREATED)
     public User addResourceAdministrator(
             @RequestParam @NotBlank String login,
@@ -69,7 +71,7 @@ public class UserController {
         );
     }
 
-    @PostMapping("/userAdministarators")
+    @PostMapping("/userAdministrators")
     @ResponseStatus(HttpStatus.CREATED)
     public User addUserAdministrator(
             @RequestParam @NotBlank String login,
@@ -100,9 +102,10 @@ public class UserController {
     public void updateUser(
             @PathVariable UUID uuid,
             @RequestParam @NotBlank String firstName,
-            @RequestParam @NotBlank String lastName) {
+            @RequestParam @NotBlank String lastName,
+            @RequestHeader("If-Match") Long version) {
 
-        userManager.updateUser(uuid, firstName, lastName);
+        userManager.updateUser(uuid, firstName, lastName, version);
     }
 
 }

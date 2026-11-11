@@ -50,9 +50,21 @@ public class RentManager {
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Nie znaleziono pokoju o UUID: " + roomUuid));
 
+        if (room.isRented()){
+            throw new BusinessLogicException("Pokój " + room.getNumber() + "jest już wynajęty.");
+        }
+
         if (rentRepository.existsByRoomAndEndTimeIsNull(room)) {
             throw new BusinessLogicException(
                     "Pokój " + room.getNumber() + " jest już wynajęty.");
+        }
+
+        room.setRented(true);
+
+        try {
+            roomRepository.save(room);
+        } catch (org.springframework.dao.OptimisticLockingFailureException e) {
+            throw new BusinessLogicException("Konflikt współbieżności: Pokój został właśnie wynajęty przez kogoś innego.");
         }
 
         return rentRepository.create(beginTime, client, room);
@@ -77,6 +89,12 @@ public class RentManager {
         }
 
         rent.setEndTime(endTime);
+
+        // Zwalniamy pokój po wynajmie
+        Room room = rent.getRoom();
+        room.setRented(false);
+        roomRepository.save(room);
+
         rentRepository.save(rent);
     }
 

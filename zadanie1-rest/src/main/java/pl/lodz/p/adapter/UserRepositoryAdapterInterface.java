@@ -2,6 +2,7 @@ package pl.lodz.p.adapter;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
+import pl.lodz.p.exception.InvalidValueException;
 import pl.lodz.p.model.domain.Client;
 import pl.lodz.p.model.domain.ResourceAdministrator;
 import pl.lodz.p.model.domain.User;
@@ -22,6 +23,10 @@ public interface UserRepositoryAdapterInterface extends MongoRepository<User, UU
             String firstName,
             String lastName,
             boolean active) {
+
+        if (login == null || login.trim().isEmpty()) {
+            throw new InvalidValueException("Login nie może być pusty");
+        }
 
         UUID uuid = UUID.randomUUID();
         User user;

@@ -18,6 +18,17 @@ public interface RentRepositoryAdapterInterface extends MongoRepository<Rent, UU
     List<Rent> findByRoomAndEndTimeIsNull(Room room);
     List<Rent> findByRoomAndEndTimeIsNotNull(Room room);
     default Rent create(LocalDateTime beginTime, Client client, Room room) {
+
+        if (beginTime == null) {
+            throw new IllegalArgumentException("Czas rozpoczęcia wynajmu nie może być pusty");
+        }
+        if (client == null) {
+            throw new IllegalArgumentException("Klient nie może być pusty");
+        }
+        if (room == null) {
+            throw new IllegalArgumentException("Pokój nie może być pusty");
+        }
+
         Rent rent = new Rent(
                 UUID.randomUUID(),
                 beginTime,

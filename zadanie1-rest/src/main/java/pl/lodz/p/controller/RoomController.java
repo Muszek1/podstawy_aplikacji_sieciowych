@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.annotation.RequestScope;
 import pl.lodz.p.manager.RoomManager;
 import pl.lodz.p.model.domain.Room;
 
@@ -14,6 +15,7 @@ import java.util.UUID;
 
 
 @RestController
+@RequestScope
 class RoomController {
     private final RoomManager roomManager;
 
@@ -41,9 +43,10 @@ class RoomController {
     public void updateRoom(
             @PathVariable UUID uuid,
             @RequestParam @Positive int bedsAmount,
-            @RequestParam @PositiveOrZero double price) {
+            @RequestParam @PositiveOrZero double price,
+            @RequestHeader("If-Match") Long version) {
 
-        roomManager.updateRoom(uuid, bedsAmount, price);
+        roomManager.updateRoom(uuid, bedsAmount, price, version);
     }
 
     @DeleteMapping("/room/{uuid}")

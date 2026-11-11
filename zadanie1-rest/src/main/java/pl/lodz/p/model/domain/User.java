@@ -93,4 +93,7 @@ public abstract class User {
         return Objects.hashCode(uuid);
     }
 
+    public Object getVersion() {
+        return version;
+    }
 }

@@ -29,6 +29,8 @@ public class Room {
     @PositiveOrZero
     private double price;
 
+    private boolean rented = false;
+
     @Version
     private Long version;
 
@@ -63,6 +65,13 @@ public class Room {
 
     public void setBedsAmount(int bedsAmount) { this.bedsAmount = bedsAmount; }
 
+    public boolean isRented() {
+        return rented;
+    }
+
+    public void setRented(boolean rented) {
+        this.rented = rented;
+    }
 
 
     @Override
@@ -84,5 +93,9 @@ public class Room {
     @Override
     public int hashCode() {
         return Objects.hashCode(uuid);
+    }
+
+    public Object getVersion() {
+        return version;
     }
 }

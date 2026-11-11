@@ -4,6 +4,7 @@ package pl.lodz.p.controller;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.annotation.RequestScope;
 import pl.lodz.p.manager.RentManager;
 import pl.lodz.p.model.domain.Rent;
 
@@ -13,6 +14,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/rents")
+@RequestScope
 public class RentController {
 
     private final RentManager rentManager;

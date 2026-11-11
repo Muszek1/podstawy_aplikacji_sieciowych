@@ -22,17 +22,16 @@ public class RoomManager {
     }
 
     public Room createRoom(String number, int bedsAmount, double price) {
-        if (adapter.existsByNumber(number)) {
-            throw new UniqueValueException(
-                    "Pokój o numerze " + number + " już istnieje"
-            );
-        }
 
         return adapter.create(number, bedsAmount, price);
     }
 
-    public void updateRoom(UUID uuid, int bedsAmount, double price) {
+    public void updateRoom(UUID uuid, int bedsAmount, double price, Long expectedVersion) {
         Room actualRoom = findRoomByUuid(uuid);
+
+        if (!actualRoom.getVersion().equals(expectedVersion)) {
+            throw new BusinessLogicException("Obiekt został w międzyczasie zmodyfikowany przez kogoś innego (konflikt wersji)");
+        }
 
         actualRoom.setBedsAmount(bedsAmount);
         actualRoom.setPrice(price);
