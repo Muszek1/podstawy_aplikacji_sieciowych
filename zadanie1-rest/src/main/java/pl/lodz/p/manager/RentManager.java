@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 import pl.lodz.p.adapter.RentRepositoryAdapterInterface;
 import pl.lodz.p.adapter.RoomRepositoryAdapterInterface;
 import pl.lodz.p.adapter.UserRepositoryAdapterInterface;
+import pl.lodz.p.exception.BusinessLogicException;
 import pl.lodz.p.exception.EntityNotFoundException;
 import pl.lodz.p.model.domain.Client;
 import pl.lodz.p.model.domain.Rent;
@@ -20,48 +21,114 @@ public class RentManager {
     private final UserRepositoryAdapterInterface userRepository;
     private final RoomRepositoryAdapterInterface roomRepository;
 
-    public RentManager(RentRepositoryAdapterInterface rentRepository, UserRepositoryAdapterInterface userRepository, RoomRepositoryAdapterInterface roomRepository) {
+
+    public RentManager(RentRepositoryAdapterInterface rentRepository,
+                       UserRepositoryAdapterInterface userRepository,
+                       RoomRepositoryAdapterInterface roomRepository) {
+
         this.rentRepository = rentRepository;
         this.userRepository = userRepository;
         this.roomRepository = roomRepository;
     }
 
-    public Rent createRent(UUID clientUuid, UUID roomUuid){
+    public Rent createRent(UUID clientUuid, UUID roomUuid, LocalDateTime beginTime) {
 
         User user = userRepository.findById(clientUuid)
                 .orElseThrow(() -> new EntityNotFoundException("Nie znaleziono klienta o uuid: " + clientUuid));
 
         if (!(user instanceof Client client)) {
-            throw new IllegalArgumentException("Pokój może wynająć tylko klient.");
+            throw new BusinessLogicException("Pokój może wynająć tylko klient.");
+        }
+
+        if (!client.isActive()) {
+            throw new BusinessLogicException(
+                    "Nieaktywny klient nie może wynająć pokoju"
+            );
         }
 
         Room room = roomRepository.findById(roomUuid)
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Nie znaleziono pokoju o UUID: " + roomUuid));
 
-        if (rentRepository.existsByRoomNumberAndEndTimeIsNull(
-                room.getNumber())) {
-            throw new IllegalStateException(
+        if (rentRepository.existsByRoomAndEndTimeIsNull(room)) {
+            throw new BusinessLogicException(
                     "Pokój " + room.getNumber() + " jest już wynajęty.");
         }
 
-        Rent rent = new Rent(UUID.randomUUID(), LocalDateTime.now(), client, room);
+        Rent rent = new Rent(UUID.randomUUID(), beginTime, client, room);
         return rentRepository.save(rent);
     }
 
-    public void endRent(String roomNumber) {
-        Rent activeRent = rentRepository.findByRoomNumberAndEndTimeIsNull(roomNumber)
-                .orElseThrow(() -> new EntityNotFoundException("Pokój " + roomNumber + " nie jest aktualnie wynajęty."));
+    public void endRent(UUID rentUuid) {
+        Rent rent = rentRepository.findById(rentUuid)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Nie znaleziono wynajmu: " + rentUuid
+                ));
 
-        activeRent.setEndTime(LocalDateTime.now());
-        rentRepository.save(activeRent);
+        if (rent.getEndTime() != null) {
+            return;
+        }
+
+        LocalDateTime endTime = LocalDateTime.now();
+
+        if (endTime.isBefore(rent.getBeginTime())) {
+            throw new BusinessLogicException(
+                    "Nie można zakończyć wynajmu przed jego rozpoczęciem"
+            );
+        }
+
+        rent.setEndTime(endTime);
+        rentRepository.save(rent);
     }
 
-    public List<Rent> getClientRents(String clientLogin) {
-        return rentRepository.findByClientLogin(clientLogin);
+    public List<Rent> getClientRents(UUID clientUuid, boolean current) {
+        User user = userRepository.findById(clientUuid)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Nie znaleziono klienta: " + clientUuid
+                ));
+
+        if (!(user instanceof Client client)) {
+            throw new BusinessLogicException(
+                    "Wskazany użytkownik nie jest klientem"
+            );
+        }
+
+        return current
+                ? rentRepository.findByClientAndEndTimeIsNull(client)
+                : rentRepository.findByClientAndEndTimeIsNotNull(client);
+    }
+
+    public List<Rent> getRoomRents(UUID roomUuid, boolean current) {
+        Room room = roomRepository.findById(roomUuid)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Nie znaleziono pokoju: " + roomUuid
+                ));
+
+        return current
+                ? rentRepository.findByRoomAndEndTimeIsNull(room)
+                : rentRepository.findByRoomAndEndTimeIsNotNull(room);
+    }
+
+    public Rent findRentByUuid(UUID uuid) {
+        return rentRepository.findById(uuid)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Nie znaleziono wynajmu: " + uuid
+                ));
     }
 
     public List<Rent> getAllRents() {
         return rentRepository.findAll();
+    }
+
+    public void deleteRent(UUID uuid) {
+        long deleted = rentRepository.deleteByUuidAndEndTimeIsNull(uuid);
+
+        if (deleted == 0) {
+            findRentByUuid(uuid);
+
+            throw new BusinessLogicException(
+                    "Nie można usunąć zakończonego wynajmu"
+            );
+        }
     }
 }
