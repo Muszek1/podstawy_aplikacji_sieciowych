@@ -2,7 +2,7 @@ package pl.lodz.p.manager;
 
 import org.springframework.stereotype.Service;
 import pl.lodz.p.adapter.RoomRepositoryAdapterInterface;
-
+import pl.lodz.p.exception.BusinessLogicException;
 import pl.lodz.p.exception.EntityNotFoundException;
 import pl.lodz.p.exception.UniqueValueException;
 import pl.lodz.p.model.domain.*;
@@ -15,9 +15,11 @@ import java.util.UUID;
 @Service
 public class RoomManager {
     private final RoomRepositoryAdapterInterface adapter;
+    private final RentManager rentManager;
 
-    public RoomManager(RoomRepositoryAdapterInterface repository) {
+    public RoomManager(RoomRepositoryAdapterInterface repository, RentManager rentManager) {
         this.adapter = repository;
+        this.rentManager = rentManager;
     }
 
     public Room createRoom(Room room) {
@@ -28,8 +30,8 @@ public class RoomManager {
         return adapter.save(room);
     }
 
-    public void updateRoom(Room externalRoom) {
-        Room actualRoom = findRoomByUuid(externalRoom.getUuid());
+    public void updateRoom(Room externalRoom, UUID uuid) {
+        Room actualRoom = findRoomByUuid(uuid);
 
         actualRoom.setBedsAmount(externalRoom.getBedsAmount());
         actualRoom.setBasePrice(externalRoom.getBasePrice());
@@ -39,8 +41,8 @@ public class RoomManager {
 
 
     public Room findRoomByNumber(String number) {
-        return adapter.findByNumber(number);
-                //.orElseThrow(() -> new EntityNotFoundException("Nie znaleziono pokoju o numerze: " + number));
+        return adapter.findByNumber(number)
+                .orElseThrow(() -> new EntityNotFoundException("Nie znaleziono pokoju o numerze: " + number));
     }
 
     public Room findRoomByUuid(UUID uuid) {
@@ -53,12 +55,13 @@ public class RoomManager {
         return adapter.findAll();
     }
 
-    public void deleteRoom(String number) {
-        try {
-            Room room = adapter.findByNumber(number);
-            adapter.delete(room);
-        } catch (Exception e) {
+    public void deleteRoom(UUID uuid) {
+        Room room = findRoomByUuid(uuid);
 
+        if (rentManager.hasRoomActiveRents(room)) {
+            throw new BusinessLogicException("Pokój o numerze " + room.getNumber() + " jest aktualnie wynajmowany i nie może zostać usunięty");
         }
+
+        adapter.delete(room);
     }
 }

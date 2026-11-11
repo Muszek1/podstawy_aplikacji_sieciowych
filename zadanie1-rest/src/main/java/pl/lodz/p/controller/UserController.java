@@ -2,6 +2,7 @@ package pl.lodz.p.controller;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import pl.lodz.p.manager.UserManager;
 import pl.lodz.p.model.domain.Client;
@@ -43,37 +44,42 @@ public class UserController {
     }
 
     @PostMapping("/clients")
+    @ResponseStatus(HttpStatus.CREATED)
     public User addClient(@Valid @RequestBody Client client) {
         return userManager.createUser(client);
     }
 
     @PostMapping("/resourceAdministators")
+    @ResponseStatus(HttpStatus.CREATED)
     public User addResourceAdministrator(@Valid @RequestBody ResourceAdministrator resourceAdministrator) {
         return userManager.createUser(resourceAdministrator);
     }
 
     @PostMapping("/userAdministarators")
+    @ResponseStatus(HttpStatus.CREATED)
     public User addUserAdministrator(@Valid @RequestBody UserAdministrator userAdministrator) {
         return userManager.createUser(userAdministrator);
     }
 
     @PatchMapping("/{uuid}/activate")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void activateUser(@PathVariable UUID uuid) {
         userManager.activateUser(uuid);
     }
 
     @PatchMapping("/{uuid}/deactivate")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deactivateUser(@PathVariable UUID uuid) {
         userManager.archiveUser(uuid);
     }
 
     @PutMapping("/{uuid}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public User updateUser(
             @PathVariable UUID uuid,
-            @RequestParam @NotBlank String firstName,
-            @RequestParam @NotBlank String lastName) {
+            @RequestBody User updatedUser) {
 
-        return userManager.updateUser(uuid, firstName, lastName);
+        return userManager.updateUser(uuid, updatedUser);
     }
 
 }

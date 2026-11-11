@@ -29,11 +29,11 @@ public class UserManager {
         }
     }
 
-    public User updateUser(UUID uuid, String firstName, String lastName) {
+    public User updateUser(UUID uuid, User updatedUser) {
         User user = findUserByUuid(uuid);
 
-        user.setFirstName(firstName);
-        user.setLastName(lastName);
+        user.setFirstName(updatedUser.getFirstName());
+        user.setLastName(updatedUser.getLastName());
 
         return adapter.save(user);
     }

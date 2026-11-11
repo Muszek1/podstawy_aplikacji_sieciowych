@@ -10,7 +10,7 @@ import java.util.UUID;
 
 public interface RoomRepositoryAdapterInterface extends MongoRepository<Room, UUID> {
 
-    Room findByNumber(String number);
+    Optional<Room> findByNumber(String number);
     boolean existsByNumber(String number);
 
 }

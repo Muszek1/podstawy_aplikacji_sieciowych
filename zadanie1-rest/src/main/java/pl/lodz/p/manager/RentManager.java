@@ -55,7 +55,7 @@ public class RentManager {
                     "Pokój " + room.getNumber() + " jest już wynajęty.");
         }
 
-        Rent rent = new Rent(UUID.randomUUID(), beginTime, client, room);
+        Rent rent = new Rent(beginTime, client, room);
         return rentRepository.save(rent);
     }
 
@@ -130,5 +130,9 @@ public class RentManager {
                     "Nie można usunąć zakończonego wynajmu"
             );
         }
+    }
+
+    public boolean hasRoomActiveRents(Room room) {
+        return rentRepository.existsByRoomAndEndTimeIsNull(room);
     }
 }

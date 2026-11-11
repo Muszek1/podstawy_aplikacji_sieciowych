@@ -1,11 +1,13 @@
 package pl.lodz.p.controller;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.lodz.p.manager.RoomManager;
 import pl.lodz.p.model.domain.Room;
 
 import java.util.List;
+import java.util.UUID;
 
 
 @RestController
@@ -26,17 +28,20 @@ class RoomController {
         return roomManager.findRoomByNumber(number);
     }
 
-    @PutMapping("/room/{number}")
-    public void updateRoom(@RequestBody Room updatedRoom, @PathVariable String number) {
-        roomManager.updateRoom(updatedRoom);
+    @PutMapping("/room/{uuid}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void updateRoom(@RequestBody Room updatedRoom, @PathVariable UUID uuid) {
+        roomManager.updateRoom(updatedRoom, uuid);
     }
 
-    @DeleteMapping("/room/{number}")
-    public void deleteRoom(@PathVariable String number) {
-        roomManager.deleteRoom(number);
+    @DeleteMapping("/room/{uuid}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteRoom(@PathVariable UUID uuid) {
+        roomManager.deleteRoom(uuid);
     }
 
     @PostMapping("/rooms")
+    @ResponseStatus(HttpStatus.CREATED)
     public Room addRoom(@RequestBody Room newRoom) {
         return roomManager.createRoom(newRoom);
     }

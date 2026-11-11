@@ -1,6 +1,9 @@
 package pl.lodz.p.model.domain;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
 import java.time.LocalDateTime;
@@ -9,20 +12,27 @@ import java.util.UUID;
 
 @Document(collection = "rents")
 public class Rent {
+    @NotNull
     private final LocalDateTime beginTime;
+
     private LocalDateTime endTime;
 
+    @NotNull
     @DocumentReference(lazy = true)
     private final Client client;
 
+    @NotNull
     @DocumentReference(lazy = true)
     private final Room room;
 
     @Id
     private final UUID uuid;
 
-    public Rent(UUID uuid, LocalDateTime beginTime, Client client, Room room) {
-        this.uuid = Objects.requireNonNull(uuid);
+    @Version
+    private Long version;
+
+    public Rent(LocalDateTime beginTime, Client client, Room room) {
+        this.uuid = UUID.randomUUID();
         this.beginTime = Objects.requireNonNull(beginTime);
         this.client = Objects.requireNonNull(client);
         this.room = Objects.requireNonNull(room);
