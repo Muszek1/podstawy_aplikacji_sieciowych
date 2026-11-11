@@ -1,5 +1,6 @@
 package pl.lodz.p.manager;
 
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import pl.lodz.p.adapter.UserRepositoryAdapterInterface;
 import pl.lodz.p.exception.EntityNotFoundException;
@@ -19,14 +20,22 @@ public class UserManager {
             throw new UniqueValueException("Użytkownik o loginie = " + user.getLogin() + " już istnieje");
         }
 
-        return adapter.save(user);
+        try {
+            return adapter.save(user);
+        }catch (DuplicateKeyException e) {
+            throw new UniqueValueException(
+                    "Konflikt unikalności danych użytkownika"
+            );
+        }
     }
 
-    public void updateUser(User user) {
-        User existingUser = findUserByUuid(user.getUuid());
-        existingUser.setFirstName(user.getFirstName());
-        existingUser.setLastName(user.getLastName());
-        adapter.save(existingUser);
+    public User updateUser(UUID uuid, String firstName, String lastName) {
+        User user = findUserByUuid(uuid);
+
+        user.setFirstName(firstName);
+        user.setLastName(lastName);
+
+        return adapter.save(user);
     }
 
     public UserManager(UserRepositoryAdapterInterface adapter) {

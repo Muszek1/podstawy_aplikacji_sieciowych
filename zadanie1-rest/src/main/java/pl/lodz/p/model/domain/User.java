@@ -1,6 +1,8 @@
 package pl.lodz.p.model.domain;
 
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -8,6 +10,9 @@ import java.util.UUID;
 public abstract class User {
     @Id
     private final UUID uuid;
+
+    @NotBlank(message = "Login nie może być pusty")
+    @Indexed(unique = true)
     private String login;
     private String firstName;
     private String lastName;
