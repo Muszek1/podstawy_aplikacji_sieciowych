@@ -7,6 +7,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import pl.lodz.p.AbstractTest;
 import pl.lodz.p.adapter.RoomRepositoryAdapterInterface;
+import pl.lodz.p.model.domain.Room;
+
+import java.util.Optional;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
@@ -24,17 +27,11 @@ class RoomControllerTest extends AbstractTest {
 
     @Test
     public void addRoomTest() {
-        String requestBody = """
-                {
-                    "number": "10",
-                    "bedsAmount": 2,
-                    "price": 100.0
-                }
-                """;
+        Room newRoom = new Room("10", 2, 100.0);
 
         given()
             .contentType(ContentType.JSON)
-            .body(requestBody)
+            .body(newRoom)
         .when()
             .post("/rooms")
         .then()
@@ -42,5 +39,9 @@ class RoomControllerTest extends AbstractTest {
                 .body("number", equalTo("10"))
                 .body("bedsAmount", equalTo(2))
                 .body("price", equalTo(100.0f));
+
+        Room foundRoom = roomRepository.findByNumber("10").get();
+
+        assertEquals(newRoom, foundRoom);
     }
 }
