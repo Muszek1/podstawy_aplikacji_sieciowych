@@ -27,20 +27,22 @@ class RoomControllerTest extends AbstractTest {
 
     @Test
     public void addRoomTest() {
-        Room newRoom = new Room("10", 2, 100.0);
 
-        given()
-            .contentType(ContentType.JSON)
-            .body(newRoom)
-        .when()
+        Room newRoom = given()
+                .queryParam("number", "10")
+                .queryParam("bedsAmount", 2)
+                .queryParam("price", 100.0)
+                .when()
             .post("/rooms")
         .then()
                 .statusCode(HttpStatus.SC_CREATED)
                 .body("number", equalTo("10"))
                 .body("bedsAmount", equalTo(2))
-                .body("price", equalTo(100.0f));
+                .body("price", equalTo(100.0f))
+                .extract()
+                .as(Room.class);
 
-        Room foundRoom = roomRepository.findByNumber("10").get();
+        Room foundRoom = roomRepository.findByNumber("10").orElseThrow();
 
         assertEquals(newRoom, foundRoom);
     }

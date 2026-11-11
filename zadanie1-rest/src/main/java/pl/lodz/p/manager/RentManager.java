@@ -56,7 +56,7 @@ public class RentManager {
         }
 
         Rent rent = new Rent(beginTime, client, room);
-        return rentRepository.save(rent);
+        return rentRepository.create(rent);
     }
 
     public void endRent(UUID rentUuid) {

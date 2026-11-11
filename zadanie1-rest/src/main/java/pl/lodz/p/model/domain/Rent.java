@@ -3,6 +3,7 @@ package pl.lodz.p.model.domain;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.PersistenceCreator;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
@@ -32,12 +33,13 @@ public class Rent {
     private Long version;
 
     public Rent(LocalDateTime beginTime, Client client, Room room) {
-        this.uuid = UUID.randomUUID();
+        this.uuid = null;
         this.beginTime = Objects.requireNonNull(beginTime);
         this.client = Objects.requireNonNull(client);
         this.room = Objects.requireNonNull(room);
     }
 
+    @PersistenceCreator
     public Rent(UUID uuid, LocalDateTime beginTime, LocalDateTime endTime, Client client, Room room) {
         this.uuid = Objects.requireNonNull(uuid);
         this.beginTime = Objects.requireNonNull(beginTime);
@@ -88,11 +90,11 @@ public class Rent {
         if (this == object) return true;
         if (object == null || getClass() != object.getClass()) return false;
         Rent other = (Rent) object;
-        return uuid.equals(other.uuid);
+        return uuid != null && uuid.equals(other.uuid);
     }
 
     @Override
     public int hashCode() {
-        return uuid.hashCode();
+        return Objects.hashCode(uuid);
     }
 }

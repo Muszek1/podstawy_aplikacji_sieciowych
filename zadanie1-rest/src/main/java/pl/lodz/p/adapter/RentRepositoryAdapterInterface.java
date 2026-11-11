@@ -16,4 +16,15 @@ public interface RentRepositoryAdapterInterface extends MongoRepository<Rent, UU
     List<Rent> findByClientAndEndTimeIsNotNull(Client client);
     List<Rent> findByRoomAndEndTimeIsNull(Room room);
     List<Rent> findByRoomAndEndTimeIsNotNull(Room room);
+    default Rent create(Rent rent) {
+        Rent newRent = new Rent(
+                UUID.randomUUID(),
+                rent.getBeginTime(),
+                null,
+                rent.getClient(),
+                rent.getRoom()
+        );
+
+        return insert(newRent);
+    }
 }

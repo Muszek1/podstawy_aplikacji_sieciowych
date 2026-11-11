@@ -9,7 +9,6 @@ import pl.lodz.p.model.domain.*;
 
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -22,19 +21,21 @@ public class RoomManager {
         this.rentManager = rentManager;
     }
 
-    public Room createRoom(Room room) {
-        if (adapter.existsByNumber(room.getNumber())) {
-            throw new UniqueValueException("Pokój o numerze " + room.getNumber() + " już istnieje");
+    public Room createRoom(String number, int bedsAmount, double price) {
+        if (adapter.existsByNumber(number)) {
+            throw new UniqueValueException(
+                    "Pokój o numerze " + number + " już istnieje"
+            );
         }
 
-        return adapter.save(room);
+        return adapter.create(number, bedsAmount, price);
     }
 
-    public void updateRoom(Room externalRoom, UUID uuid) {
+    public void updateRoom(UUID uuid, int bedsAmount, double price) {
         Room actualRoom = findRoomByUuid(uuid);
 
-        actualRoom.setBedsAmount(externalRoom.getBedsAmount());
-        actualRoom.setBasePrice(externalRoom.getBasePrice());
+        actualRoom.setBedsAmount(bedsAmount);
+        actualRoom.setPrice(price);
 
         adapter.save(actualRoom);
     }

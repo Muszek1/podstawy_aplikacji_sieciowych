@@ -21,7 +21,7 @@ public class UserManager {
         }
 
         try {
-            return adapter.save(user);
+            return adapter.create(user);
         }catch (DuplicateKeyException e) {
             throw new UniqueValueException(
                     "Konflikt unikalności danych użytkownika"

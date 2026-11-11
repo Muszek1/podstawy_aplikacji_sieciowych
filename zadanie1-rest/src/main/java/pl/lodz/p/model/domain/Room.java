@@ -32,18 +32,10 @@ public class Room {
     @Version
     private Long version;
 
+    @JsonCreator
     @PersistenceCreator
     public Room(UUID uuid, String number, int bedsAmount, double price) {
         this.uuid = Objects.requireNonNull(uuid, "uuid cannot be null");
-        this.number = number;
-        this.bedsAmount = bedsAmount;
-        this.price = price;
-    }
-
-    @JsonCreator
-    public Room(@JsonProperty("number") String number, @JsonProperty("bedsAmount") int bedsAmount, @JsonProperty("price") double price) {
-
-        this.uuid = UUID.randomUUID();
         this.number = number;
         this.bedsAmount = bedsAmount;
         this.price = price;
@@ -57,7 +49,7 @@ public class Room {
         return price;
     }
 
-    public void setBasePrice(double price) {
+    public void setPrice(double price) {
         this.price = price;
     }
 
@@ -71,9 +63,6 @@ public class Room {
 
     public void setBedsAmount(int bedsAmount) { this.bedsAmount = bedsAmount; }
 
-    public double getBasePrice() {
-        return price;
-    }
 
 
     @Override
@@ -89,11 +78,11 @@ public class Room {
         if (this == object) return true;
         if (object == null || getClass() != object.getClass()) return false;
         Room other = (Room) object;
-        return uuid.equals(other.uuid);
+        return uuid != null && uuid.equals(other.uuid);
     }
 
     @Override
     public int hashCode() {
-        return uuid.hashCode();
+        return Objects.hashCode(uuid);
     }
 }

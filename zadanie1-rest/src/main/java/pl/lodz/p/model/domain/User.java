@@ -2,6 +2,7 @@ package pl.lodz.p.model.domain;
 
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.PersistenceCreator;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.index.Indexed;
 
@@ -44,7 +45,7 @@ public abstract class User {
             throw new IllegalArgumentException("login cannot be null or blank");
         }
 
-        this.uuid = UUID.randomUUID();
+        this.uuid = null;
         this.login = login;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -96,12 +97,12 @@ public abstract class User {
     public final boolean equals(Object object) {
         if (this == object) return true;
         if (!(object instanceof User other)) return false;
-        return uuid.equals(other.uuid);
+        return uuid != null && uuid.equals(other.uuid);
     }
 
     @Override
     public final int hashCode() {
-        return uuid.hashCode();
+        return Objects.hashCode(uuid);
     }
 
 }

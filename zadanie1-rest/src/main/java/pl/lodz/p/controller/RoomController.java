@@ -1,6 +1,9 @@
 package pl.lodz.p.controller;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import pl.lodz.p.manager.RoomManager;
@@ -35,8 +38,12 @@ class RoomController {
 
     @PutMapping("/room/{uuid}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void updateRoom(@Valid @RequestBody Room updatedRoom, @PathVariable UUID uuid) {
-        roomManager.updateRoom(updatedRoom, uuid);
+    public void updateRoom(
+            @PathVariable UUID uuid,
+            @RequestParam @Positive int bedsAmount,
+            @RequestParam @PositiveOrZero double price) {
+
+        roomManager.updateRoom(uuid, bedsAmount, price);
     }
 
     @DeleteMapping("/room/{uuid}")
@@ -47,7 +54,11 @@ class RoomController {
 
     @PostMapping("/rooms")
     @ResponseStatus(HttpStatus.CREATED)
-    public Room addRoom(@Valid @RequestBody Room newRoom) {
-        return roomManager.createRoom(newRoom);
+    public Room addRoom(
+            @RequestParam @NotBlank String number,
+            @RequestParam @Positive int bedsAmount,
+            @RequestParam @PositiveOrZero double price) {
+
+        return roomManager.createRoom(number, bedsAmount, price);
     }
 }

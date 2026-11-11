@@ -12,5 +12,14 @@ public interface RoomRepositoryAdapterInterface extends MongoRepository<Room, UU
 
     Optional<Room> findByNumber(String number);
     boolean existsByNumber(String number);
+    default Room create(String number, int bedsAmount, double price) {
+        Room room = new Room(
+                UUID.randomUUID(),
+                number,
+                bedsAmount,
+                price
+        );
 
+        return insert(room);
+    }
 }
