@@ -16,29 +16,30 @@ public interface UserRepositoryAdapterInterface extends MongoRepository<User, UU
     Optional<User> findByLogin(String login);
     boolean existsByLogin(String login);
     List<User> findByLoginContainingIgnoreCase(String loginToMatch);
-    default User create(User user) {
-        UUID uuid = UUID.randomUUID();
-        User newUser;
+    default User create(
+            Class<? extends User> userType,
+            String login,
+            String firstName,
+            String lastName,
+            boolean active) {
 
-        if (user instanceof Client) {
-            newUser = new Client(
-                    uuid, user.getLogin(), user.getFirstName(),
-                    user.getLastName(), user.isActive()
+        UUID uuid = UUID.randomUUID();
+        User user;
+
+        if (userType == Client.class) {
+            user = new Client(uuid, login, firstName, lastName, active);
+        } else if (userType == ResourceAdministrator.class) {
+            user = new ResourceAdministrator(
+                    uuid, login, firstName, lastName, active
             );
-        } else if (user instanceof ResourceAdministrator) {
-            newUser = new ResourceAdministrator(
-                    uuid, user.getLogin(), user.getFirstName(),
-                    user.getLastName(), user.isActive()
-            );
-        } else if (user instanceof UserAdministrator) {
-            newUser = new UserAdministrator(
-                    uuid, user.getLogin(), user.getFirstName(),
-                    user.getLastName(), user.isActive()
+        } else if (userType == UserAdministrator.class) {
+            user = new UserAdministrator(
+                    uuid, login, firstName, lastName, active
             );
         } else {
             throw new IllegalArgumentException("Nieobsługiwany typ użytkownika");
         }
 
-        return insert(newUser);
+        return insert(user);
     }
 }

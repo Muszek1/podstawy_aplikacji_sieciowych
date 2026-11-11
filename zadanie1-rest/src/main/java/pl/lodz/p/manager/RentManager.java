@@ -55,8 +55,7 @@ public class RentManager {
                     "Pokój " + room.getNumber() + " jest już wynajęty.");
         }
 
-        Rent rent = new Rent(beginTime, client, room);
-        return rentRepository.create(rent);
+        return rentRepository.create(beginTime, client, room);
     }
 
     public void endRent(UUID rentUuid) {

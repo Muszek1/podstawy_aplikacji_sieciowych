@@ -1,6 +1,5 @@
 package pl.lodz.p.model.domain;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceCreator;
@@ -19,7 +18,7 @@ public class Rent {
     private LocalDateTime endTime;
 
     @NotNull
-    @DocumentReference(lazy = true)
+    @DocumentReference(collection = "user", lazy = true)
     private final Client client;
 
     @NotNull
@@ -32,12 +31,6 @@ public class Rent {
     @Version
     private Long version;
 
-    public Rent(LocalDateTime beginTime, Client client, Room room) {
-        this.uuid = null;
-        this.beginTime = Objects.requireNonNull(beginTime);
-        this.client = Objects.requireNonNull(client);
-        this.room = Objects.requireNonNull(room);
-    }
 
     @PersistenceCreator
     public Rent(UUID uuid, LocalDateTime beginTime, LocalDateTime endTime, Client client, Room room) {

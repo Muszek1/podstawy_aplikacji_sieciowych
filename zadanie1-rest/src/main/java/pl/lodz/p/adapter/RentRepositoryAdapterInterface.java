@@ -5,6 +5,7 @@ import pl.lodz.p.model.domain.Client;
 import pl.lodz.p.model.domain.Rent;
 import pl.lodz.p.model.domain.Room;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -16,15 +17,15 @@ public interface RentRepositoryAdapterInterface extends MongoRepository<Rent, UU
     List<Rent> findByClientAndEndTimeIsNotNull(Client client);
     List<Rent> findByRoomAndEndTimeIsNull(Room room);
     List<Rent> findByRoomAndEndTimeIsNotNull(Room room);
-    default Rent create(Rent rent) {
-        Rent newRent = new Rent(
+    default Rent create(LocalDateTime beginTime, Client client, Room room) {
+        Rent rent = new Rent(
                 UUID.randomUUID(),
-                rent.getBeginTime(),
+                beginTime,
                 null,
-                rent.getClient(),
-                rent.getRoom()
+                client,
+                room
         );
 
-        return insert(newRent);
+        return insert(rent);
     }
 }

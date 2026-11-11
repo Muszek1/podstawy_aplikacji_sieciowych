@@ -4,7 +4,6 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import pl.lodz.p.adapter.UserRepositoryAdapterInterface;
 import pl.lodz.p.exception.EntityNotFoundException;
-import pl.lodz.p.exception.InvalidValueException;
 import pl.lodz.p.exception.UniqueValueException;
 import pl.lodz.p.model.domain.*;
 
@@ -15,13 +14,23 @@ import java.util.UUID;
 public class UserManager {
     private final UserRepositoryAdapterInterface adapter;
 
-    public User createUser(User user) {
-        if (adapter.existsByLogin(user.getLogin())) {
-            throw new UniqueValueException("Użytkownik o loginie = " + user.getLogin() + " już istnieje");
+    public User createUser(
+            Class<? extends User> userType,
+            String login,
+            String firstName,
+            String lastName,
+            boolean active) {
+
+        if (adapter.existsByLogin(login)) {
+            throw new UniqueValueException(
+                    "Użytkownik o loginie " + login + " już istnieje"
+            );
         }
 
         try {
-            return adapter.create(user);
+            return adapter.create(
+                    userType, login, firstName, lastName, active
+            );
         }catch (DuplicateKeyException e) {
             throw new UniqueValueException(
                     "Konflikt unikalności danych użytkownika"
@@ -29,13 +38,13 @@ public class UserManager {
         }
     }
 
-    public User updateUser(UUID uuid, User updatedUser) {
+    public void updateUser(UUID uuid, String firstName, String lastName) {
         User user = findUserByUuid(uuid);
 
-        user.setFirstName(updatedUser.getFirstName());
-        user.setLastName(updatedUser.getLastName());
+        user.setFirstName(firstName);
+        user.setLastName(lastName);
 
-        return adapter.save(user);
+        adapter.save(user);
     }
 
     public UserManager(UserRepositoryAdapterInterface adapter) {

@@ -2,13 +2,14 @@ package pl.lodz.p.model.domain;
 
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.PersistenceCreator;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.Objects;
 import java.util.UUID;
 
+@Document(collection = "user")
 public abstract class User {
     @Id
     private final UUID uuid;
@@ -33,19 +34,6 @@ public abstract class User {
         }
 
         this.uuid = Objects.requireNonNull(uuid, "uuid cannot be null");
-        this.login = login;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.active = active;
-    }
-
-    public User(String login, String firstName, String lastName, boolean active) {
-
-        if (login == null || login.isBlank()) {
-            throw new IllegalArgumentException("login cannot be null or blank");
-        }
-
-        this.uuid = null;
         this.login = login;
         this.firstName = firstName;
         this.lastName = lastName;

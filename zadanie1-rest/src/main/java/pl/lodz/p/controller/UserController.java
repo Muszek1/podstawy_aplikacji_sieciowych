@@ -1,6 +1,5 @@
 package pl.lodz.p.controller;
 
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -45,20 +44,43 @@ public class UserController {
 
     @PostMapping("/clients")
     @ResponseStatus(HttpStatus.CREATED)
-    public User addClient(@Valid @RequestBody Client client) {
-        return userManager.createUser(client);
+    public User addClient(
+            @RequestParam @NotBlank String login,
+            @RequestParam @NotBlank String firstName,
+            @RequestParam @NotBlank String lastName,
+            @RequestParam boolean active) {
+
+        return userManager.createUser(
+                Client.class, login, firstName, lastName, active
+        );
     }
 
     @PostMapping("/resourceAdministators")
     @ResponseStatus(HttpStatus.CREATED)
-    public User addResourceAdministrator(@Valid @RequestBody ResourceAdministrator resourceAdministrator) {
-        return userManager.createUser(resourceAdministrator);
+    public User addResourceAdministrator(
+            @RequestParam @NotBlank String login,
+            @RequestParam @NotBlank String firstName,
+            @RequestParam @NotBlank String lastName,
+            @RequestParam boolean active) {
+
+        return userManager.createUser(
+                ResourceAdministrator.class,
+                login, firstName, lastName, active
+        );
     }
 
     @PostMapping("/userAdministarators")
     @ResponseStatus(HttpStatus.CREATED)
-    public User addUserAdministrator(@Valid @RequestBody UserAdministrator userAdministrator) {
-        return userManager.createUser(userAdministrator);
+    public User addUserAdministrator(
+            @RequestParam @NotBlank String login,
+            @RequestParam @NotBlank String firstName,
+            @RequestParam @NotBlank String lastName,
+            @RequestParam boolean active) {
+
+        return userManager.createUser(
+                UserAdministrator.class,
+                login, firstName, lastName, active
+        );
     }
 
     @PatchMapping("/{uuid}/activate")
@@ -75,11 +97,12 @@ public class UserController {
 
     @PutMapping("/{uuid}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public User updateUser(
+    public void updateUser(
             @PathVariable UUID uuid,
-            @RequestBody User updatedUser) {
+            @RequestParam @NotBlank String firstName,
+            @RequestParam @NotBlank String lastName) {
 
-        return userManager.updateUser(uuid, updatedUser);
+        userManager.updateUser(uuid, firstName, lastName);
     }
 
 }
