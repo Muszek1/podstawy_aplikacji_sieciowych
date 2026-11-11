@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import pl.lodz.p.AbstractTest;
 import pl.lodz.p.adapter.RentRepositoryAdapterInterface;
+import pl.lodz.p.adapter.RoomRepositoryAdapterInterface;
 import pl.lodz.p.model.domain.Rent;
 
 import java.time.LocalDateTime;
@@ -18,6 +19,9 @@ class RentControllerTest extends AbstractTest {
 
     @Autowired
     private RentRepositoryAdapterInterface rentRepository;
+
+    @Autowired
+    private RoomRepositoryAdapterInterface roomRepository;
 
     @Test
     public void createRentTest() {
@@ -77,4 +81,62 @@ class RentControllerTest extends AbstractTest {
         assertNull(foundRent.getEndTime());
         assertTrue(foundRent.isActive());
     }
+
+    @Test
+    public void rentAlreadyRentedRoomTest() {
+        String suffix = UUID.randomUUID().toString();
+
+        String clientUuid = given()
+                .queryParam("login", "client-" + suffix)
+                .queryParam("firstName", "Jan")
+                .queryParam("lastName", "Kowalski")
+                .queryParam("active", true)
+                .when()
+                .post("/users/clients")
+                .then()
+                .statusCode(HttpStatus.SC_CREATED)
+                .extract()
+                .path("uuid");
+
+        String roomUuid = given()
+                .queryParam("number", "room-" + suffix)
+                .queryParam("bedsAmount", 2)
+                .queryParam("price", 100.0)
+                .when()
+                .post("/rooms")
+                .then()
+                .statusCode(HttpStatus.SC_CREATED)
+                .extract()
+                .path("uuid");
+
+        LocalDateTime beginTime = LocalDateTime.now().withNano(0);
+
+        given()
+                .queryParam("clientUUID", clientUuid)
+                .queryParam("roomUUID", roomUuid)
+                .queryParam("beginTime", beginTime.toString())
+                .when()
+                .post("/rents")
+                .then()
+                .statusCode(HttpStatus.SC_CREATED);
+
+        given()
+                .queryParam("clientUUID", clientUuid)
+                .queryParam("roomUUID", roomUuid)
+                .queryParam("beginTime", beginTime.toString())
+                .when()
+                .post("/rents")
+                .then()
+                .statusCode(HttpStatus.SC_CONFLICT);
+
+        var rents = rentRepository.findByRoomAndEndTimeIsNull(
+                roomRepository.findById(UUID.fromString(roomUuid))
+                        .orElseThrow()
+        );
+
+        assertEquals(1, rents.size());
+    }
+
+
+
 }

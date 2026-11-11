@@ -46,4 +46,18 @@ class RoomControllerTest extends AbstractTest {
 
         assertEquals(newRoom, foundRoom);
     }
+
+    @Test
+    public void addRoomWithZeroBedsTest() {
+        given()
+                .queryParam("number", "invalid-room")
+                .queryParam("bedsAmount", 0)
+                .queryParam("price", 100.0)
+                .when()
+                .post("/rooms")
+                .then()
+                .statusCode(HttpStatus.SC_BAD_REQUEST);
+
+        assertTrue(roomRepository.findByNumber("invalid-room").isEmpty());
+    }
 }
