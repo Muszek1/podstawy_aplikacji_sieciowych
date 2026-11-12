@@ -1,14 +1,20 @@
 package pl.lodz.p.model.domain;
 
+import jakarta.validation.constraints.NotNull;
+
 import java.time.LocalDateTime;
 import java.util.Objects;
 
 
 public class Rent {
 
+    @NotNull
     private final LocalDateTime beginTime;
     private LocalDateTime endTime;
+
+    @NotNull
     private final Client client;
+    @NotNull
     private final Room room;
     private final String id;
     private Long version;

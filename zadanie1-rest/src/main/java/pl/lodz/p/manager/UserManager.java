@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.context.annotation.RequestScope;
 import pl.lodz.p.adapter.UserRepositoryAdapterInterface;
 import pl.lodz.p.exception.BusinessLogicException;
+import pl.lodz.p.exception.ConcurrentOperationException;
 import pl.lodz.p.exception.EntityNotFoundException;
 import pl.lodz.p.exception.UniqueValueException;
 import pl.lodz.p.model.domain.*;
@@ -38,7 +39,7 @@ public class UserManager {
         User user = findUserById(id);
 
         if (!user.getVersion().equals(expectedVersion)) {
-            throw new BusinessLogicException("Obiekt został w międzyczasie zmodyfikowany przez kogoś innego (konflikt wersji)");
+            throw new ConcurrentOperationException("Obiekt został w międzyczasie zmodyfikowany przez kogoś innego (konflikt wersji)");
         }
 
         user.setFirstName(firstName);

@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.context.annotation.RequestScope;
 import pl.lodz.p.adapter.RoomRepositoryAdapterInterface;
 import pl.lodz.p.exception.BusinessLogicException;
+import pl.lodz.p.exception.ConcurrentOperationException;
 import pl.lodz.p.exception.EntityNotFoundException;
 import pl.lodz.p.model.domain.*;
 
@@ -30,7 +31,7 @@ public class RoomManager {
         Room actualRoom = findRoomById(id);
 
         if (!actualRoom.getVersion().equals(expectedVersion)) {
-            throw new BusinessLogicException("Obiekt został w międzyczasie zmodyfikowany przez kogoś innego (konflikt wersji)");
+            throw new ConcurrentOperationException("Obiekt został w międzyczasie zmodyfikowany przez kogoś innego (konflikt wersji)");
         }
 
         actualRoom.setBedsAmount(bedsAmount);

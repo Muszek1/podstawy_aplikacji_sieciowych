@@ -1,5 +1,8 @@
 package pl.lodz.p.model.domain;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 import java.util.Objects;
 import java.util.UUID;
 
@@ -7,10 +10,15 @@ import java.util.UUID;
 public class Room {
 
     private String id;
+
+    @NotBlank
     private String number;
+
     private int bedsAmount;
     private double price;
     private boolean rented = false;
+
+    @NotNull
     private Long version;
 
     public Room(String id, String number, int bedsAmount, double price, boolean rented, Long version) {

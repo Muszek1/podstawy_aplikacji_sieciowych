@@ -7,8 +7,12 @@ import com.mongodb.client.model.Updates;
 import com.mongodb.client.result.UpdateResult;
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import org.bson.types.ObjectId;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Repository;
+import pl.lodz.p.exception.ConcurrentOperationException;
+import pl.lodz.p.exception.EntityNotFoundException;
+import pl.lodz.p.exception.InvalidValueException;
 import pl.lodz.p.model.domain.Client;
 import pl.lodz.p.model.domain.Rent;
 import pl.lodz.p.model.domain.Room;
@@ -29,7 +33,7 @@ public class RentRepositoryAdapter implements RentRepositoryAdapterInterface {
     public RentRepositoryAdapter(MongoClient mongoClient,
                                  UserRepositoryAdapterInterface userRepository,
                                  RoomRepositoryAdapterInterface roomRepository) {
-        this.collection = mongoClient.getDatabase("rental_db").getCollection("rents");
+        this.collection = mongoClient.getDatabase("pasdb").getCollection("rents");
         this.userRepository = userRepository;
         this.roomRepository = roomRepository;
     }
@@ -37,21 +41,21 @@ public class RentRepositoryAdapter implements RentRepositoryAdapterInterface {
     @Override
     public Rent create(LocalDateTime beginTime, Client client, Room room) {
         if (beginTime == null) {
-            throw new IllegalArgumentException("Czas rozpoczęcia wynajmu nie może być pusty");
+            throw new InvalidValueException("Czas rozpoczęcia wynajmu nie może być pusty");
         }
         if (client == null) {
-            throw new IllegalArgumentException("Klient nie może być pusty");
+            throw new InvalidValueException("Klient nie może być pusty");
         }
         if (room == null) {
-            throw new IllegalArgumentException("Pokój nie może być pusty");
+            throw new InvalidValueException("Pokój nie może być pusty");
         }
 
         Long initialVersion = 0L;
 
         Document doc = new Document("beginTime", beginTime.toString())
                 .append("endTime", null)
-                .append("clientId", client.getId())
-                .append("roomId", room.getId())
+                .append("client", new ObjectId(client.getId()))
+                .append("room", new ObjectId(room.getId()))
                 .append("version", initialVersion);
 
         collection.insertOne(doc);
@@ -68,7 +72,7 @@ public class RentRepositoryAdapter implements RentRepositoryAdapterInterface {
     @Override
     public List<Rent> findByClientAndEndTimeIsNull(Client client) {
         return findByFilters(Filters.and(
-                Filters.eq("clientId", client.getId()),
+                Filters.eq("client", new ObjectId(client.getId())),
                 Filters.eq("endTime", null)
         ));
     }
@@ -76,15 +80,15 @@ public class RentRepositoryAdapter implements RentRepositoryAdapterInterface {
     @Override
     public List<Rent> findByClientAndEndTimeIsNotNull(Client client) {
         return findByFilters(Filters.and(
-                Filters.eq("clientId", client.getId()),
-                Filters.ne("endTime", null) // Nie jest nulem
+                Filters.eq("client", new ObjectId(client.getId())),
+                Filters.ne("endTime", null)
         ));
     }
 
     @Override
     public List<Rent> findByRoomAndEndTimeIsNull(Room room) {
         return findByFilters(Filters.and(
-                Filters.eq("roomId", room.getId()),
+                Filters.eq("room", new ObjectId(room.getId())),
                 Filters.eq("endTime", null)
         ));
     }
@@ -92,7 +96,7 @@ public class RentRepositoryAdapter implements RentRepositoryAdapterInterface {
     @Override
     public List<Rent> findByRoomAndEndTimeIsNotNull(Room room) {
         return findByFilters(Filters.and(
-                Filters.eq("roomId", room.getId()),
+                Filters.eq("room", new ObjectId(room.getId())),
                 Filters.ne("endTime", null)
         ));
     }
@@ -108,7 +112,7 @@ public class RentRepositoryAdapter implements RentRepositoryAdapterInterface {
         Long newVersion = currentVersion + 1;
 
         Bson query = Filters.and(
-                Filters.eq("_id", new org.bson.types.ObjectId(rent.getId())), // Zamiast rent.getId().toString()
+                Filters.eq("_id", new org.bson.types.ObjectId(rent.getId())),
                 Filters.eq("version", currentVersion)
         );
 
@@ -122,7 +126,7 @@ public class RentRepositoryAdapter implements RentRepositoryAdapterInterface {
         UpdateResult result = collection.updateOne(query, update);
 
         if (result.getModifiedCount() == 0) {
-            throw new OptimisticLockingFailureException("Konflikt! Wynajem został w międzyczasie zmodyfikowany.");
+            throw new ConcurrentOperationException("Konflikt! Wynajem został w międzyczasie zmodyfikowany.");
         }
 
         rent.setVersion(newVersion);
@@ -130,7 +134,7 @@ public class RentRepositoryAdapter implements RentRepositoryAdapterInterface {
 
     @Override
     public void delete(Rent rent) {
-        collection.deleteOne(Filters.eq("_id", new org.bson.types.ObjectId(rent.getId())));
+        collection.deleteOne(Filters.eq("_id", new ObjectId(rent.getId())));
     }
 
     @Override
@@ -159,14 +163,14 @@ public class RentRepositoryAdapter implements RentRepositoryAdapterInterface {
 
 
 
-        String clientId = doc.getString("clientId");
-        String roomId = doc.getString("roomId");
+        String client = doc.getObjectId("client").toHexString();
+        String roomId = doc.getObjectId("room").toHexString();
 
-        User user = userRepository.findById(clientId)
-                .orElseThrow(() -> new IllegalStateException("Nie znaleziono klienta przypisanego do wynajmu"));
+        User user = userRepository.findById(client)
+                .orElseThrow(() -> new EntityNotFoundException("Nie znaleziono klienta przypisanego do wynajmu"));
 
         Room room = roomRepository.findById(roomId)
-                .orElseThrow(() -> new IllegalStateException("Nie znaleziono pokoju przypisanego do wynajmu"));
+                .orElseThrow(() -> new EntityNotFoundException("Nie znaleziono pokoju przypisanego do wynajmu"));
 
         return new Rent(id, beginTime, endTime, (Client) user, room, version);
     }

@@ -1,14 +1,26 @@
 package pl.lodz.p.model.domain;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 import java.util.Objects;
 
 
 public abstract class User {
     private final String id;
+
+    @NotBlank
     private String login;
+
+    @NotBlank
     private String firstName;
+
+    @NotBlank
     private String lastName;
+
     private boolean active;
+
+    @NotNull
     private Long version;
 
     public User(String id, String login, String firstName, String lastName, boolean active, Long version) {

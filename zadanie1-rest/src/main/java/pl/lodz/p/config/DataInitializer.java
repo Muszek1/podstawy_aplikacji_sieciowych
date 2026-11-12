@@ -1,6 +1,7 @@
 package pl.lodz.p.config;
 
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 import pl.lodz.p.adapter.RentRepositoryAdapterInterface;
 import pl.lodz.p.adapter.RoomRepositoryAdapterInterface;

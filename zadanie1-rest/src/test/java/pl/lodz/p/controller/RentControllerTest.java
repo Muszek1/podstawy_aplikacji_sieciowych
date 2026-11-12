@@ -201,7 +201,7 @@ class RentControllerTest extends AbstractTest {
                 .queryParam("clientId", clientId)
                 .queryParam("roomId", roomId)
                 .queryParam("beginTime", LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS).toString())
-                .when().post("/rents");
+                .when().post("/rents").then().statusCode(201);
 
         given()
                 .queryParam("current", true)

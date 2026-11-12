@@ -26,7 +26,7 @@ public class UserRepositoryAdapter implements UserRepositoryAdapterInterface{
     private final MongoCollection<Document> collection;
 
     public UserRepositoryAdapter(MongoClient mongoClient) {
-        this.collection = mongoClient.getDatabase("rental_db").getCollection("users");
+        this.collection = mongoClient.getDatabase("pasdb").getCollection("users");
 
         this.collection.createIndex(
                 new Document("login", 1),

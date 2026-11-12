@@ -26,7 +26,7 @@ public class RoomRepositoryAdapter implements RoomRepositoryAdapterInterface {
     private final MongoCollection<Document> collection;
 
     public RoomRepositoryAdapter(MongoClient mongoClient) {
-        this.collection = mongoClient.getDatabase("rental_db").getCollection("rooms");
+        this.collection = mongoClient.getDatabase("pasdb").getCollection("rooms");
 
         this.collection.createIndex(
                 new Document("number", 1),

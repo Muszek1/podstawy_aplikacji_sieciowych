@@ -6,6 +6,7 @@ import pl.lodz.p.adapter.RentRepositoryAdapterInterface;
 import pl.lodz.p.adapter.RoomRepositoryAdapterInterface;
 import pl.lodz.p.adapter.UserRepositoryAdapterInterface;
 import pl.lodz.p.exception.BusinessLogicException;
+import pl.lodz.p.exception.ConcurrentOperationException;
 import pl.lodz.p.exception.EntityNotFoundException;
 import pl.lodz.p.model.domain.Client;
 import pl.lodz.p.model.domain.Rent;
@@ -60,7 +61,7 @@ public class RentManager {
         try {
             roomRepository.save(room);
         } catch (org.springframework.dao.OptimisticLockingFailureException e) {
-            throw new BusinessLogicException("Konflikt współbieżności: Pokój został właśnie wynajęty przez kogoś innego.");
+            throw new ConcurrentOperationException("Konflikt współbieżności: Pokój został właśnie wynajęty przez kogoś innego.");
         }
 
         return rentRepository.create(beginTime, client, room);
