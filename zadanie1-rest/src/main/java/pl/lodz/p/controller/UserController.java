@@ -11,7 +11,6 @@ import pl.lodz.p.model.domain.User;
 import pl.lodz.p.model.domain.UserAdministrator;
 
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/users")
@@ -29,9 +28,9 @@ public class UserController {
         return userManager.findAllUsers();
     }
 
-    @GetMapping("/{uuid}")
-    public User getByUuid(@PathVariable UUID uuid){
-        return userManager.findUserByUuid(uuid);
+    @GetMapping("/{id}")
+    public User getByUuid(@PathVariable String id){
+        return userManager.findUserById(id);
     }
 
     @GetMapping("/by-login")
@@ -85,27 +84,27 @@ public class UserController {
         );
     }
 
-    @PatchMapping("/{uuid}/activate")
+    @PatchMapping("/{id}/activate")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void activateUser(@PathVariable UUID uuid) {
-        userManager.activateUser(uuid);
+    public void activateUser(@PathVariable String id) {
+        userManager.activateUser(id);
     }
 
-    @PatchMapping("/{uuid}/deactivate")
+    @PatchMapping("/{id}/deactivate")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deactivateUser(@PathVariable UUID uuid) {
-        userManager.archiveUser(uuid);
+    public void deactivateUser(@PathVariable String id) {
+        userManager.archiveUser(id);
     }
 
-    @PutMapping("/{uuid}")
+    @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void updateUser(
-            @PathVariable UUID uuid,
+            @PathVariable String id,
             @RequestParam @NotBlank String firstName,
             @RequestParam @NotBlank String lastName,
             @RequestHeader("If-Match") Long version) {
 
-        userManager.updateUser(uuid, firstName, lastName, version);
+        userManager.updateUser(id, firstName, lastName, version);
     }
 
 }

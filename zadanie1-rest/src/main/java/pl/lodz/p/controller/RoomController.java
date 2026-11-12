@@ -1,6 +1,5 @@
 package pl.lodz.p.controller;
 
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -11,7 +10,6 @@ import pl.lodz.p.manager.RoomManager;
 import pl.lodz.p.model.domain.Room;
 
 import java.util.List;
-import java.util.UUID;
 
 
 @RestController
@@ -28,31 +26,31 @@ class RoomController {
         return roomManager.findAllRooms();
     }
 
-    @GetMapping("/room/{number}")
+    @GetMapping("/rooms/number/{number}")
     public Room getByNumber(@PathVariable String number) {
         return roomManager.findRoomByNumber(number);
     }
 
-    @GetMapping("/rooms/{uuid}")
-    public Room getByUuid(@PathVariable UUID uuid) {
-        return roomManager.findRoomByUuid(uuid);
+    @GetMapping("/rooms/{id}")
+    public Room getById(@PathVariable String id) {
+        return roomManager.findRoomById(id);
     }
 
-    @PutMapping("/room/{uuid}")
+    @PutMapping("/rooms/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void updateRoom(
-            @PathVariable UUID uuid,
+            @PathVariable String id,
             @RequestParam @Positive int bedsAmount,
             @RequestParam @PositiveOrZero double price,
             @RequestHeader("If-Match") Long version) {
 
-        roomManager.updateRoom(uuid, bedsAmount, price, version);
+        roomManager.updateRoom(id, bedsAmount, price, version);
     }
 
-    @DeleteMapping("/room/{uuid}")
+    @DeleteMapping("/rooms/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteRoom(@PathVariable UUID uuid) {
-        roomManager.deleteRoom(uuid);
+    public void deleteRoom(@PathVariable String id) {
+        roomManager.deleteRoom(id);
     }
 
     @PostMapping("/rooms")

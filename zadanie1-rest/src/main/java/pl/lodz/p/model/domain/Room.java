@@ -6,15 +6,15 @@ import java.util.UUID;
 
 public class Room {
 
-    private UUID uuid;
+    private String id;
     private String number;
     private int bedsAmount;
     private double price;
     private boolean rented = false;
     private Long version;
 
-    public Room(UUID uuid, String number, int bedsAmount, double price, boolean rented, Long version) {
-        this.uuid = Objects.requireNonNull(uuid, "uuid cannot be null");
+    public Room(String id, String number, int bedsAmount, double price, boolean rented, Long version) {
+        this.id = Objects.requireNonNull(id, "id cannot be null");
         this.number = number;
         this.bedsAmount = bedsAmount;
         this.price = price;
@@ -22,8 +22,8 @@ public class Room {
         this.version = version != null ? version : 0L;
     }
 
-    public UUID getUuid() {
-        return uuid;
+    public String getId() {
+        return id;
     }
 
     public double getPrice() {
@@ -66,12 +66,12 @@ public class Room {
         if (this == object) return true;
         if (object == null || getClass() != object.getClass()) return false;
         Room other = (Room) object;
-        return uuid != null && uuid.equals(other.uuid);
+        return id != null && id.equals(other.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(uuid);
+        return Objects.hashCode(id);
     }
 
     public Long getVersion() {

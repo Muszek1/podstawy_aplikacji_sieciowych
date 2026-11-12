@@ -10,7 +10,6 @@ import pl.lodz.p.exception.UniqueValueException;
 import pl.lodz.p.model.domain.*;
 
 import java.util.List;
-import java.util.UUID;
 
 @Service
 @RequestScope
@@ -35,8 +34,8 @@ public class UserManager {
         }
     }
 
-    public void updateUser(UUID uuid, String firstName, String lastName, Long expectedVersion) {
-        User user = findUserByUuid(uuid);
+    public void updateUser(String id, String firstName, String lastName, Long expectedVersion) {
+        User user = findUserById(id);
 
         if (!user.getVersion().equals(expectedVersion)) {
             throw new BusinessLogicException("Obiekt został w międzyczasie zmodyfikowany przez kogoś innego (konflikt wersji)");
@@ -52,14 +51,14 @@ public class UserManager {
         this.adapter = adapter;
     }
 
-    public void archiveUser(UUID uuid) {
-        User user = findUserByUuid(uuid);
+    public void archiveUser(String id) {
+        User user = findUserById(id);
         user.setActive(false);
         adapter.save(user);
     }
 
-    public void activateUser(UUID uuid) {
-        User user = findUserByUuid(uuid);
+    public void activateUser(String id) {
+        User user = findUserById(id);
         user.setActive(true);
         adapter.save(user);
     }
@@ -68,9 +67,9 @@ public class UserManager {
         return adapter.findByLogin(login)
                 .orElseThrow(() -> new EntityNotFoundException("Nie znaleziono użytkownika o loginie: " + login));
     }
-    public User findUserByUuid(UUID uuid) {
-        return adapter.findById(uuid)
-                .orElseThrow(() -> new EntityNotFoundException("Nie znaleziono użytkownika o uuid: " + uuid));
+    public User findUserById(String id) {
+        return adapter.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Nie znaleziono użytkownika o id: " + id));
     }
 
 

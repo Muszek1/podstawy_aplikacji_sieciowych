@@ -7,13 +7,12 @@ import pl.lodz.p.model.domain.Room;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 public interface RentRepositoryAdapterInterface {
 
     Rent create(LocalDateTime beginTime, Client client, Room room);
 
-    Optional<Rent> findById(UUID uuid);
+    Optional<Rent> findById(String id);
 
     List<Rent> findByClientAndEndTimeIsNull(Client client);
     List<Rent> findByClientAndEndTimeIsNotNull(Client client);

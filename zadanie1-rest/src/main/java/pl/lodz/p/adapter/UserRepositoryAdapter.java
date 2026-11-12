@@ -18,7 +18,6 @@ import pl.lodz.p.model.domain.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.regex.Pattern;
 
 @Repository
@@ -41,12 +40,10 @@ public class UserRepositoryAdapter implements UserRepositoryAdapterInterface{
             throw new InvalidValueException("Login nie może być pusty");
         }
 
-        UUID uuid = UUID.randomUUID();
         Long initialVersion = 0L;
         String clazzName = userType.getSimpleName();
 
-        Document doc = new Document("_id", uuid.toString())
-                .append("login", login)
+        Document doc = new Document("login", login)
                 .append("firstName", firstName)
                 .append("lastName", lastName)
                 .append("active", active)
@@ -66,8 +63,8 @@ public class UserRepositoryAdapter implements UserRepositoryAdapterInterface{
     }
 
     @Override
-    public Optional<User> findById(UUID uuid) {
-        Document doc = collection.find(Filters.eq("_id", uuid.toString())).first();
+    public Optional<User> findById(String id) {
+        Document doc = collection.find(Filters.eq("_id", new org.bson.types.ObjectId(id))).first();
         return Optional.ofNullable(mapToUser(doc));
     }
 
@@ -108,7 +105,7 @@ public class UserRepositoryAdapter implements UserRepositoryAdapterInterface{
         Long newVersion = currentVersion + 1;
 
         Bson query = Filters.and(
-                Filters.eq("_id", user.getUuid().toString()),
+                Filters.eq("_id", new org.bson.types.ObjectId(user.getId())),
                 Filters.eq("version", currentVersion)
         );
 
@@ -131,7 +128,7 @@ public class UserRepositoryAdapter implements UserRepositoryAdapterInterface{
 
     @Override
     public void delete(User user) {
-        collection.deleteOne(Filters.eq("_id", user.getUuid().toString()));
+        collection.deleteOne(Filters.eq("_id", new org.bson.types.ObjectId(user.getId())));
     }
 
     @Override
@@ -142,21 +139,21 @@ public class UserRepositoryAdapter implements UserRepositoryAdapterInterface{
     private User mapToUser(Document doc) {
         if (doc == null) return null;
 
-        UUID uuid = UUID.fromString(doc.getString("_id"));
+
+        String id = doc.getObjectId("_id").toHexString();
         String login = doc.getString("login");
         String firstName = doc.getString("firstName");
         String lastName = doc.getString("lastName");
         boolean active = doc.getBoolean("active");
         Long version = doc.getLong("version");
-
         String clazz = doc.getString("_clazz");
 
         if ("Client".equals(clazz)) {
-            return new Client(uuid, login, firstName, lastName, active, version);
+            return new Client(id, login, firstName, lastName, active, version);
         } else if ("ResourceAdministrator".equals(clazz)) {
-            return new ResourceAdministrator(uuid, login, firstName, lastName, active, version);
+            return new ResourceAdministrator(id, login, firstName, lastName, active, version);
         } else if ("UserAdministrator".equals(clazz)) {
-            return new UserAdministrator(uuid, login, firstName, lastName, active, version);
+            return new UserAdministrator(id, login, firstName, lastName, active, version);
         }
 
         throw new IllegalStateException("Nieznany typ użytkownika: " + clazz);

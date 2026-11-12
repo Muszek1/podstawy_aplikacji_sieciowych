@@ -10,7 +10,6 @@ import pl.lodz.p.model.domain.Rent;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/rents")
@@ -30,44 +29,44 @@ public class RentController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Rent createRent(@RequestParam UUID clientUUID,
-                           @RequestParam UUID roomUUID,
+    public Rent createRent(@RequestParam String clientId,
+                           @RequestParam String roomId,
                            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
                            LocalDateTime beginTime) {
 
-        return rentManager.createRent(clientUUID, roomUUID, beginTime);
+        return rentManager.createRent(clientId, roomId, beginTime);
     }
 
-    @PatchMapping("/{uuid}/end")
+    @PatchMapping("/{id}/end")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void endRent(@PathVariable UUID uuid) {
-        rentManager.endRent(uuid);
+    public void endRent(@PathVariable String id) {
+        rentManager.endRent(id);
     }
 
-    @GetMapping("/clients/{clientUuid}")
+    @GetMapping("/clients/{clientId}")
     public List<Rent> getClientRents(
-            @PathVariable UUID clientUuid,
+            @PathVariable String clientId,
             @RequestParam boolean current) {
 
-        return rentManager.getClientRents(clientUuid, current);
+        return rentManager.getClientRents(clientId, current);
     }
 
-    @GetMapping("/rooms/{roomUuid}")
+    @GetMapping("/rooms/{roomId}")
     public List<Rent> getRoomRents(
-            @PathVariable UUID roomUuid,
+            @PathVariable String roomId,
             @RequestParam boolean current) {
 
-        return rentManager.getRoomRents(roomUuid, current);
+        return rentManager.getRoomRents(roomId, current);
     }
 
-    @GetMapping("/{uuid}")
-    public Rent getByUuid(@PathVariable UUID uuid) {
-        return rentManager.findRentByUuid(uuid);
+    @GetMapping("/{id}")
+    public Rent getByUuid(@PathVariable String id) {
+        return rentManager.findRentById(id);
     }
 
-    @DeleteMapping("/{uuid}")
+    @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteRent(@PathVariable UUID uuid) {
-        rentManager.deleteRent(uuid);
+    public void deleteRent(@PathVariable String id) {
+        rentManager.deleteRent(id);
     }
 }

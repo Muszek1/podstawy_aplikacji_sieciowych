@@ -18,7 +18,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 @Repository
 public class RentRepositoryAdapter implements RentRepositoryAdapterInterface {
@@ -47,31 +46,29 @@ public class RentRepositoryAdapter implements RentRepositoryAdapterInterface {
             throw new IllegalArgumentException("Pokój nie może być pusty");
         }
 
-        UUID uuid = UUID.randomUUID();
         Long initialVersion = 0L;
 
-        Document doc = new Document("_id", uuid.toString())
-                .append("beginTime", beginTime.toString())
+        Document doc = new Document("beginTime", beginTime.toString())
                 .append("endTime", null)
-                .append("clientId", client.getUuid().toString())
-                .append("roomId", room.getUuid().toString())
+                .append("clientId", client.getId())
+                .append("roomId", room.getId())
                 .append("version", initialVersion);
 
         collection.insertOne(doc);
 
-        return new Rent(uuid, beginTime, null, client, room, initialVersion);
+        return mapToRent(doc);
     }
 
     @Override
-    public Optional<Rent> findById(UUID uuid) {
-        Document doc = collection.find(Filters.eq("_id", uuid.toString())).first();
+    public Optional<Rent> findById(String id) {
+        Document doc = collection.find(Filters.eq("_id", new org.bson.types.ObjectId(id))).first();
         return Optional.ofNullable(mapToRent(doc));
     }
 
     @Override
     public List<Rent> findByClientAndEndTimeIsNull(Client client) {
         return findByFilters(Filters.and(
-                Filters.eq("clientId", client.getUuid().toString()),
+                Filters.eq("clientId", client.getId()),
                 Filters.eq("endTime", null)
         ));
     }
@@ -79,7 +76,7 @@ public class RentRepositoryAdapter implements RentRepositoryAdapterInterface {
     @Override
     public List<Rent> findByClientAndEndTimeIsNotNull(Client client) {
         return findByFilters(Filters.and(
-                Filters.eq("clientId", client.getUuid().toString()),
+                Filters.eq("clientId", client.getId()),
                 Filters.ne("endTime", null) // Nie jest nulem
         ));
     }
@@ -87,7 +84,7 @@ public class RentRepositoryAdapter implements RentRepositoryAdapterInterface {
     @Override
     public List<Rent> findByRoomAndEndTimeIsNull(Room room) {
         return findByFilters(Filters.and(
-                Filters.eq("roomId", room.getUuid().toString()),
+                Filters.eq("roomId", room.getId()),
                 Filters.eq("endTime", null)
         ));
     }
@@ -95,7 +92,7 @@ public class RentRepositoryAdapter implements RentRepositoryAdapterInterface {
     @Override
     public List<Rent> findByRoomAndEndTimeIsNotNull(Room room) {
         return findByFilters(Filters.and(
-                Filters.eq("roomId", room.getUuid().toString()),
+                Filters.eq("roomId", room.getId()),
                 Filters.ne("endTime", null)
         ));
     }
@@ -111,7 +108,7 @@ public class RentRepositoryAdapter implements RentRepositoryAdapterInterface {
         Long newVersion = currentVersion + 1;
 
         Bson query = Filters.and(
-                Filters.eq("_id", rent.getUuid().toString()),
+                Filters.eq("_id", new org.bson.types.ObjectId(rent.getId())), // Zamiast rent.getId().toString()
                 Filters.eq("version", currentVersion)
         );
 
@@ -133,7 +130,7 @@ public class RentRepositoryAdapter implements RentRepositoryAdapterInterface {
 
     @Override
     public void delete(Rent rent) {
-        collection.deleteOne(Filters.eq("_id", rent.getUuid().toString()));
+        collection.deleteOne(Filters.eq("_id", new org.bson.types.ObjectId(rent.getId())));
     }
 
     @Override
@@ -152,7 +149,7 @@ public class RentRepositoryAdapter implements RentRepositoryAdapterInterface {
     private Rent mapToRent(Document doc) {
         if (doc == null) return null;
 
-        UUID uuid = UUID.fromString(doc.getString("_id"));
+        String id = doc.getObjectId("_id").toHexString();
         LocalDateTime beginTime = LocalDateTime.parse(doc.getString("beginTime"));
 
         String endTimeStr = doc.getString("endTime");
@@ -162,8 +159,8 @@ public class RentRepositoryAdapter implements RentRepositoryAdapterInterface {
 
 
 
-        UUID clientId = UUID.fromString(doc.getString("clientId"));
-        UUID roomId = UUID.fromString(doc.getString("roomId"));
+        String clientId = doc.getString("clientId");
+        String roomId = doc.getString("roomId");
 
         User user = userRepository.findById(clientId)
                 .orElseThrow(() -> new IllegalStateException("Nie znaleziono klienta przypisanego do wynajmu"));
@@ -171,6 +168,6 @@ public class RentRepositoryAdapter implements RentRepositoryAdapterInterface {
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new IllegalStateException("Nie znaleziono pokoju przypisanego do wynajmu"));
 
-        return new Rent(uuid, beginTime, endTime, (Client) user, room, version);
+        return new Rent(id, beginTime, endTime, (Client) user, room, version);
     }
 }

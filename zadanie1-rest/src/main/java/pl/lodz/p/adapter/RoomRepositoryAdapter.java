@@ -19,7 +19,6 @@ import pl.lodz.p.model.domain.Room;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 @Repository
 public class RoomRepositoryAdapter implements RoomRepositoryAdapterInterface {
@@ -37,18 +36,13 @@ public class RoomRepositoryAdapter implements RoomRepositoryAdapterInterface {
 
     @Override
     public Room create(String number, int bedsAmount, double price) {
-
         if (number == null || number.trim().isEmpty()) {
             throw new InvalidValueException("Numer pokoju nie może być pusty");
         }
 
-
-        UUID uuid = UUID.randomUUID();
         Long initialVersion = 0L;
 
-
-        Document doc = new Document("_id", uuid.toString())
-                .append("number", number)
+        Document doc = new Document("number", number)
                 .append("bedsAmount", bedsAmount)
                 .append("price", price)
                 .append("rented", false)
@@ -56,19 +50,22 @@ public class RoomRepositoryAdapter implements RoomRepositoryAdapterInterface {
 
         try {
             collection.insertOne(doc);
+
+            String generatedId = doc.getObjectId("_id").toHexString();
+
+            return new Room(generatedId, number, bedsAmount, price, false, initialVersion);
+
         } catch (MongoWriteException e) {
             if (e.getError().getCode() == 11000) {
                 throw new UniqueValueException("Pokój o numerze " + number + " już istnieje");
             }
             throw e;
         }
-
-        return new Room(uuid, number, bedsAmount, price, false, initialVersion);
     }
 
     @Override
-    public Optional<Room> findById(UUID uuid) {
-        Document doc = collection.find(Filters.eq("_id", uuid.toString())).first();
+    public Optional<Room> findById(String id) {
+        Document doc = collection.find(Filters.eq("_id", new org.bson.types.ObjectId(id))).first();
         return Optional.ofNullable(mapToRoom(doc));
     }
 
@@ -98,7 +95,7 @@ public class RoomRepositoryAdapter implements RoomRepositoryAdapterInterface {
         Long newVersion = currentVersion + 1;
 
         Bson query = Filters.and(
-                Filters.eq("_id", room.getUuid().toString()),
+                Filters.eq("_id", new org.bson.types.ObjectId(room.getId())),
                 Filters.eq("version", currentVersion)
         );
 
@@ -121,7 +118,7 @@ public class RoomRepositoryAdapter implements RoomRepositoryAdapterInterface {
 
     @Override
     public void delete(Room room) {
-        collection.deleteOne(Filters.eq("_id", room.getUuid().toString()));
+        collection.deleteOne(Filters.eq("_id", new org.bson.types.ObjectId(room.getId())));
     }
 
     @Override
@@ -133,7 +130,7 @@ public class RoomRepositoryAdapter implements RoomRepositoryAdapterInterface {
         if (doc == null) return null;
 
         return new Room(
-                UUID.fromString(doc.getString("_id")),
+                doc.getObjectId("_id").toHexString(),
                 doc.getString("number"),
                 doc.getInteger("bedsAmount"),
                 doc.getDouble("price"),

@@ -14,7 +14,6 @@ import pl.lodz.p.model.domain.User;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 @RequestScope
@@ -33,10 +32,10 @@ public class RentManager {
         this.roomRepository = roomRepository;
     }
 
-    public Rent createRent(UUID clientUuid, UUID roomUuid, LocalDateTime beginTime) {
+    public Rent createRent(String clientId, String roomId, LocalDateTime beginTime) {
 
-        User user = userRepository.findById(clientUuid)
-                .orElseThrow(() -> new EntityNotFoundException("Nie znaleziono klienta o uuid: " + clientUuid));
+        User user = userRepository.findById(clientId)
+                .orElseThrow(() -> new EntityNotFoundException("Nie znaleziono klienta o id: " + clientId));
 
         if (!(user instanceof Client client)) {
             throw new BusinessLogicException("Pokój może wynająć tylko klient.");
@@ -48,9 +47,9 @@ public class RentManager {
             );
         }
 
-        Room room = roomRepository.findById(roomUuid)
+        Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new EntityNotFoundException(
-                        "Nie znaleziono pokoju o UUID: " + roomUuid));
+                        "Nie znaleziono pokoju o id: " + roomId));
 
         if (room.isRented()){
             throw new BusinessLogicException("Pokój " + room.getNumber() + "jest już wynajęty.");
@@ -67,14 +66,14 @@ public class RentManager {
         return rentRepository.create(beginTime, client, room);
     }
 
-    public void endRent(UUID rentUuid) {
-        Rent rent = rentRepository.findById(rentUuid)
+    public void endRent(String rentId) {
+        Rent rent = rentRepository.findById(rentId)
                 .orElseThrow(() -> new EntityNotFoundException(
-                        "Nie znaleziono wynajmu: " + rentUuid
+                        "Nie znaleziono wynajmu: " + rentId
                 ));
 
         if (rent.getEndTime() != null) {
-            return;
+            throw new BusinessLogicException("Ten wynajem już został zakończony");
         }
 
         LocalDateTime endTime = LocalDateTime.now();
@@ -95,10 +94,10 @@ public class RentManager {
         rentRepository.save(rent);
     }
 
-    public List<Rent> getClientRents(UUID clientUuid, boolean current) {
-        User user = userRepository.findById(clientUuid)
+    public List<Rent> getClientRents(String clientId, boolean current) {
+        User user = userRepository.findById(clientId)
                 .orElseThrow(() -> new EntityNotFoundException(
-                        "Nie znaleziono klienta: " + clientUuid
+                        "Nie znaleziono klienta: " + clientId
                 ));
 
         if (!(user instanceof Client client)) {
@@ -112,10 +111,10 @@ public class RentManager {
                 : rentRepository.findByClientAndEndTimeIsNotNull(client);
     }
 
-    public List<Rent> getRoomRents(UUID roomUuid, boolean current) {
-        Room room = roomRepository.findById(roomUuid)
+    public List<Rent> getRoomRents(String roomId, boolean current) {
+        Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new EntityNotFoundException(
-                        "Nie znaleziono pokoju: " + roomUuid
+                        "Nie znaleziono pokoju: " + roomId
                 ));
 
         return current
@@ -123,10 +122,10 @@ public class RentManager {
                 : rentRepository.findByRoomAndEndTimeIsNotNull(room);
     }
 
-    public Rent findRentByUuid(UUID uuid) {
-        return rentRepository.findById(uuid)
+    public Rent findRentById(String id) {
+        return rentRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(
-                        "Nie znaleziono wynajmu: " + uuid
+                        "Nie znaleziono wynajmu: " + id
                 ));
     }
 
@@ -134,8 +133,8 @@ public class RentManager {
         return rentRepository.findAll();
     }
 
-    public void deleteRent(UUID uuid) {
-        Rent rent = findRentByUuid(uuid);
+    public void deleteRent(String id) {
+        Rent rent = findRentById(id);
 
         if (!rent.isActive()) {
             throw new BusinessLogicException("Nie można usunąć zakończonego wynajmu");

@@ -5,12 +5,10 @@ import org.springframework.web.context.annotation.RequestScope;
 import pl.lodz.p.adapter.RoomRepositoryAdapterInterface;
 import pl.lodz.p.exception.BusinessLogicException;
 import pl.lodz.p.exception.EntityNotFoundException;
-import pl.lodz.p.exception.UniqueValueException;
 import pl.lodz.p.model.domain.*;
 
 
 import java.util.List;
-import java.util.UUID;
 
 @Service
 @RequestScope
@@ -28,8 +26,8 @@ public class RoomManager {
         return adapter.create(number, bedsAmount, price);
     }
 
-    public void updateRoom(UUID uuid, int bedsAmount, double price, Long expectedVersion) {
-        Room actualRoom = findRoomByUuid(uuid);
+    public void updateRoom(String id, int bedsAmount, double price, Long expectedVersion) {
+        Room actualRoom = findRoomById(id);
 
         if (!actualRoom.getVersion().equals(expectedVersion)) {
             throw new BusinessLogicException("Obiekt został w międzyczasie zmodyfikowany przez kogoś innego (konflikt wersji)");
@@ -47,18 +45,18 @@ public class RoomManager {
                 .orElseThrow(() -> new EntityNotFoundException("Nie znaleziono pokoju o numerze: " + number));
     }
 
-    public Room findRoomByUuid(UUID uuid) {
-        return adapter.findById(uuid)
+    public Room findRoomById(String id) {
+        return adapter.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(
-                        "Nie znaleziono pokoju o UUID: " + uuid));
+                        "Nie znaleziono pokoju o id: " + id));
     }
 
     public List<Room> findAllRooms() {
         return adapter.findAll();
     }
 
-    public void deleteRoom(UUID uuid) {
-        Room room = findRoomByUuid(uuid);
+    public void deleteRoom(String id) {
+        Room room = findRoomById(id);
 
         if (rentManager.hasRoomActiveRents(room)) {
             throw new BusinessLogicException("Pokój o numerze " + room.getNumber() + " jest aktualnie wynajmowany i nie może zostać usunięty");
