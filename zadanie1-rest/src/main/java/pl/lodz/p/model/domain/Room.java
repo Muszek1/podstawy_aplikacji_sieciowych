@@ -1,46 +1,25 @@
 package pl.lodz.p.model.domain;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.PositiveOrZero;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.PersistenceCreator;
-import org.springframework.data.annotation.Version;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
-
 import java.util.Objects;
 import java.util.UUID;
 
-@Document
+
 public class Room {
-    @Id
+
     private UUID uuid;
-
-    @NotBlank
-    @Indexed(unique = true)
     private String number;
-
-    @Positive
     private int bedsAmount;
-
-    @PositiveOrZero
     private double price;
-
     private boolean rented = false;
-
-    @Version
     private Long version;
 
-    @JsonCreator
-    @PersistenceCreator
-    public Room(UUID uuid, String number, int bedsAmount, double price) {
+    public Room(UUID uuid, String number, int bedsAmount, double price, boolean rented, Long version) {
         this.uuid = Objects.requireNonNull(uuid, "uuid cannot be null");
         this.number = number;
         this.bedsAmount = bedsAmount;
         this.price = price;
+        this.rented = rented;
+        this.version = version != null ? version : 0L;
     }
 
     public UUID getUuid() {
@@ -95,7 +74,11 @@ public class Room {
         return Objects.hashCode(uuid);
     }
 
-    public Object getVersion() {
+    public Long getVersion() {
         return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
     }
 }

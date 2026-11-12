@@ -1,6 +1,7 @@
 package pl.lodz.p.manager;
 
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.annotation.RequestScope;
 import pl.lodz.p.adapter.RentRepositoryAdapterInterface;
 import pl.lodz.p.adapter.RoomRepositoryAdapterInterface;
 import pl.lodz.p.adapter.UserRepositoryAdapterInterface;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
+@RequestScope
 public class RentManager {
     private final RentRepositoryAdapterInterface rentRepository;
     private final UserRepositoryAdapterInterface userRepository;
@@ -52,11 +54,6 @@ public class RentManager {
 
         if (room.isRented()){
             throw new BusinessLogicException("Pokój " + room.getNumber() + "jest już wynajęty.");
-        }
-
-        if (rentRepository.existsByRoomAndEndTimeIsNull(room)) {
-            throw new BusinessLogicException(
-                    "Pokój " + room.getNumber() + " jest już wynajęty.");
         }
 
         room.setRented(true);
@@ -138,18 +135,16 @@ public class RentManager {
     }
 
     public void deleteRent(UUID uuid) {
-        long deleted = rentRepository.deleteByUuidAndEndTimeIsNull(uuid);
+        Rent rent = findRentByUuid(uuid);
 
-        if (deleted == 0) {
-            findRentByUuid(uuid);
-
-            throw new BusinessLogicException(
-                    "Nie można usunąć zakończonego wynajmu"
-            );
+        if (!rent.isActive()) {
+            throw new BusinessLogicException("Nie można usunąć zakończonego wynajmu");
         }
+
+        rentRepository.delete(rent);
     }
 
     public boolean hasRoomActiveRents(Room room) {
-        return rentRepository.existsByRoomAndEndTimeIsNull(room);
+        return room.isRented();
     }
 }

@@ -2,6 +2,7 @@ package pl.lodz.p.manager;
 
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.annotation.RequestScope;
 import pl.lodz.p.adapter.UserRepositoryAdapterInterface;
 import pl.lodz.p.exception.BusinessLogicException;
 import pl.lodz.p.exception.EntityNotFoundException;
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
+@RequestScope
 public class UserManager {
     private final UserRepositoryAdapterInterface adapter;
 

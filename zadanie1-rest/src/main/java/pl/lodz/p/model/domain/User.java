@@ -1,33 +1,18 @@
 package pl.lodz.p.model.domain;
 
-import jakarta.validation.constraints.NotBlank;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.Version;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
-
 import java.util.Objects;
 import java.util.UUID;
 
-@Document(collection = "user")
+
 public abstract class User {
-    @Id
     private final UUID uuid;
-
-    @NotBlank(message = "Login nie może być pusty")
-    @Indexed(unique = true)
     private String login;
-
-    @NotBlank
     private String firstName;
-    @NotBlank
     private String lastName;
     private boolean active;
-
-    @Version
     private Long version;
 
-    public User(UUID uuid, String login, String firstName, String lastName, boolean active) {
+    public User(UUID uuid, String login, String firstName, String lastName, boolean active, Long version) {
 
         if (login == null || login.isBlank()) {
             throw new IllegalArgumentException("login cannot be null or blank");
@@ -38,6 +23,7 @@ public abstract class User {
         this.firstName = firstName;
         this.lastName = lastName;
         this.active = active;
+        this.version = version != null ? version : 0L;
     }
 
     public UUID getUuid() {
@@ -93,7 +79,12 @@ public abstract class User {
         return Objects.hashCode(uuid);
     }
 
-    public Object getVersion() {
+    public Long getVersion() {
         return version;
     }
+
+    public void setVersion(Long newVersion) {
+        this.version = newVersion;
+    }
+
 }

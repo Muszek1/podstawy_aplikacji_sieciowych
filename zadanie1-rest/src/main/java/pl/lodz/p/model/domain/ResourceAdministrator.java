@@ -1,24 +1,10 @@
 package pl.lodz.p.model.domain;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import org.springframework.data.annotation.PersistenceCreator;
-import org.springframework.data.annotation.TypeAlias;
-
 import java.util.UUID;
 
-@TypeAlias("resourceAdmin")
 public class ResourceAdministrator extends User{
 
-    @JsonCreator
-    @PersistenceCreator
-    public ResourceAdministrator(
-            @JsonProperty("uuid") UUID uuid,
-            @JsonProperty("login") String login,
-            @JsonProperty("firstName") String firstName,
-            @JsonProperty("lastName") String lastName,
-            @JsonProperty("active") boolean active) {
-
-        super(uuid, login, firstName, lastName, active);
+    public ResourceAdministrator(UUID uuid, String login, String firstName, String lastName, boolean active, Long version) {
+        super(uuid, login, firstName, lastName, active, version);
     }
 }

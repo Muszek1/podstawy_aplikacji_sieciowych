@@ -7,8 +7,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import pl.lodz.p.AbstractTest;
 import pl.lodz.p.adapter.UserRepositoryAdapterInterface;
 import pl.lodz.p.model.domain.Client;
+import pl.lodz.p.model.domain.Room;
 import pl.lodz.p.model.domain.User;
 
+
+import java.util.UUID;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
@@ -99,5 +102,64 @@ class UserControllerTest extends AbstractTest {
 
         assertEquals("Jan", foundUser.getFirstName());
         assertEquals("Kowalski", foundUser.getLastName());
+    }
+
+    @Test
+    public void deactivateUserTest() {
+        Client client = given()
+                .queryParam("login", "client-to-deactivate-" + UUID.randomUUID())
+                .queryParam("firstName", "Jan")
+                .queryParam("lastName", "Kowalski")
+                .queryParam("active", true)
+                .when().post("/users/clients").as(Client.class);
+
+        given()
+                .when()
+                .patch("/users/" + client.getUuid() + "/deactivate")
+                .then()
+                .statusCode(HttpStatus.SC_NO_CONTENT);
+
+        User updatedUser = userRepository.findById(client.getUuid()).orElseThrow();
+        assertFalse(updatedUser.isActive());
+    }
+
+    @Test
+    public void getUserTest() {
+        Client client = given()
+                .queryParam("login", "client-to-deactivate-" + UUID.randomUUID())
+                .queryParam("firstName", "Jan")
+                .queryParam("lastName", "Kowalski")
+                .queryParam("active", true)
+                .when().post("/users/clients").as(Client.class);
+
+        given()
+                .when()
+                .get("/users/" + client.getUuid())
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body("login", equalTo(client.getLogin()));
+    }
+
+    @Test
+    public void updateUserTest() {
+        Client client = given()
+                .queryParam("login", "client-to-update-" + UUID.randomUUID())
+                .queryParam("firstName", "Jan")
+                .queryParam("lastName", "Kowalski")
+                .queryParam("active", true)
+                .when().post("/users/clients").as(Client.class);
+
+        given()
+                .header("If-Match", client.getVersion())
+                .queryParam("firstName", "Adam")
+                .queryParam("lastName", "Nowak")
+                .when()
+                .put("/users/" + client.getUuid())
+                .then()
+                .statusCode(HttpStatus.SC_NO_CONTENT);
+
+        User updatedUser = userRepository.findById(client.getUuid()).orElseThrow();
+        assertEquals("Adam", updatedUser.getFirstName());
+        assertEquals("Nowak", updatedUser.getLastName());
     }
 }
