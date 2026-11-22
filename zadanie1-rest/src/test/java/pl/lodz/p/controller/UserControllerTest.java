@@ -1,10 +1,11 @@
 package pl.lodz.p.controller;
 
+import io.quarkus.test.junit.QuarkusTest;
+import jakarta.inject.Inject;
 import org.apache.http.HttpStatus;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
-import org.springframework.beans.factory.annotation.Autowired;
 import pl.lodz.p.AbstractTest;
 import pl.lodz.p.adapter.UserRepositoryAdapterInterface;
 import pl.lodz.p.model.domain.Client;
@@ -15,10 +16,11 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
+@QuarkusTest
 class UserControllerTest extends AbstractTest {
 
-    @Autowired
-    private UserRepositoryAdapterInterface userRepository;
+    @Inject
+    public UserRepositoryAdapterInterface userRepository;
 
     @BeforeEach
     public void setUp() {
