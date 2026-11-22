@@ -49,6 +49,7 @@ public class UserController {
 
     @POST
     @Path("/clients")
+    @ResponseStatus(201)
     public User addClient(
             @QueryParam("login") @NotBlank String login,
             @QueryParam("firstName") @NotBlank String firstName,
@@ -62,6 +63,7 @@ public class UserController {
 
     @POST
     @Path("/resourceAdministrators")
+    @ResponseStatus(201)
     public User addResourceAdministrator(
             @QueryParam("login") @NotBlank String login,
             @QueryParam("firstName") @NotBlank String firstName,
@@ -76,6 +78,7 @@ public class UserController {
 
     @POST
     @Path("/userAdministrators")
+    @ResponseStatus(201)
     public User addUserAdministrator(
             @QueryParam("login") @NotBlank String login,
             @QueryParam("firstName") @NotBlank String firstName,

@@ -5,7 +5,6 @@ import jakarta.enterprise.context.RequestScoped;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import org.jboss.resteasy.reactive.ResponseStatus;
 import pl.lodz.p.manager.RentManager;
 import pl.lodz.p.model.domain.Rent;
 

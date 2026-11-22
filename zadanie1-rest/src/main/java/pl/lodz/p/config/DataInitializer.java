@@ -1,8 +1,8 @@
 package pl.lodz.p.config;
 
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.context.annotation.Bean;
-import org.springframework.stereotype.Component;
+import io.quarkus.runtime.StartupEvent;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
 import pl.lodz.p.adapter.RentRepositoryAdapterInterface;
 import pl.lodz.p.adapter.RoomRepositoryAdapterInterface;
 import pl.lodz.p.adapter.UserRepositoryAdapterInterface;
@@ -13,8 +13,8 @@ import pl.lodz.p.model.domain.UserAdministrator;
 
 import java.time.LocalDateTime;
 
-@Component
-public class DataInitializer implements CommandLineRunner {
+@ApplicationScoped
+public class DataInitializer {
 
     private final RoomRepositoryAdapterInterface roomRepository;
     private final UserRepositoryAdapterInterface userRepository;
@@ -28,8 +28,7 @@ public class DataInitializer implements CommandLineRunner {
         this.rentRepository = rentRepository;
     }
 
-    @Override
-    public void run(String... args) {
+    void onStart(@Observes StartupEvent event) {
         rentRepository.deleteAll();
         roomRepository.deleteAll();
         userRepository.deleteAll();

@@ -5,11 +5,10 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
 import com.mongodb.client.result.UpdateResult;
+import jakarta.enterprise.context.ApplicationScoped;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
-import org.springframework.dao.OptimisticLockingFailureException;
-import org.springframework.stereotype.Repository;
 import pl.lodz.p.exception.ConcurrentOperationException;
 import pl.lodz.p.exception.EntityNotFoundException;
 import pl.lodz.p.exception.InvalidValueException;
@@ -23,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-@Repository
+@ApplicationScoped
 public class RentRepositoryAdapter implements RentRepositoryAdapterInterface {
 
     private final MongoCollection<Document> collection;

@@ -6,11 +6,13 @@ import com.mongodb.client.model.CreateCollectionOptions;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
 import com.mongodb.client.model.ValidationOptions;
+import io.quarkus.runtime.Startup;
 import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
 import org.bson.Document;
-import org.springframework.stereotype.Component;
 
-@Component
+@Startup
+@ApplicationScoped
 public class MongoDatabaseInitializer {
     private final MongoClient mongoClient;
 

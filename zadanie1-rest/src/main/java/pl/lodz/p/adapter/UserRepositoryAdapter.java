@@ -7,10 +7,10 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Updates;
 import com.mongodb.client.result.UpdateResult;
+import jakarta.enterprise.context.ApplicationScoped;
 import org.bson.Document;
 import org.bson.conversions.Bson;
-import org.springframework.dao.OptimisticLockingFailureException;
-import org.springframework.stereotype.Repository;
+import pl.lodz.p.exception.ConcurrentOperationException;
 import pl.lodz.p.exception.InvalidValueException;
 import pl.lodz.p.exception.UniqueValueException;
 import pl.lodz.p.model.domain.*;
@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-@Repository
+@ApplicationScoped
 public class UserRepositoryAdapter implements UserRepositoryAdapterInterface{
 
     private final MongoCollection<Document> collection;
@@ -120,7 +120,7 @@ public class UserRepositoryAdapter implements UserRepositoryAdapterInterface{
         UpdateResult result = collection.updateOne(query, update);
 
         if (result.getModifiedCount() == 0) {
-            throw new OptimisticLockingFailureException("Konflikt! Użytkownik został w międzyczasie zmodyfikowany.");
+            throw new ConcurrentOperationException("Konflikt! Użytkownik został w międzyczasie zmodyfikowany.");
         }
 
         user.setVersion(newVersion);
