@@ -1,9 +1,10 @@
 package pl.lodz.p.controller;
 
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.validation.constraints.NotBlank;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.context.annotation.RequestScope;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.MediaType;
+import org.jboss.resteasy.reactive.ResponseStatus;
 import pl.lodz.p.manager.UserManager;
 import pl.lodz.p.model.domain.Client;
 import pl.lodz.p.model.domain.ResourceAdministrator;
@@ -12,9 +13,9 @@ import pl.lodz.p.model.domain.UserAdministrator;
 
 import java.util.List;
 
-@RestController
-@RequestMapping("/users")
-@RequestScope
+@Path("/users")
+@Produces(MediaType.APPLICATION_JSON)
+@RequestScoped
 public class UserController {
 
     private final UserManager userManager;
@@ -23,46 +24,49 @@ public class UserController {
         this.userManager = userManager;
     }
 
-    @GetMapping
+    @GET
     public List<User> getAll(){
         return userManager.findAllUsers();
     }
 
-    @GetMapping("/{id}")
-    public User getByUuid(@PathVariable String id){
+    @GET
+    @Path("/{id}")
+    public User getByUuid(@PathParam("id") String id) {
         return userManager.findUserById(id);
     }
 
-    @GetMapping("/by-login")
-    public User getByLogin(@RequestParam String login){
+    @GET
+    @Path("/by-login")
+    public User getByLogin(@QueryParam("login") String login) {
         return userManager.findUserByLogin(login);
     }
 
-    @GetMapping("/search")
-    public List<User> search(@RequestParam String login){
+    @GET
+    @Path("/search")
+    public List<User> search(@QueryParam("login") String login) {
         return userManager.findUsersByMatchingLogin(login);
     }
 
-    @PostMapping("/clients")
-    @ResponseStatus(HttpStatus.CREATED)
+    @POST
+    @Path("/clients")
     public User addClient(
-            @RequestParam @NotBlank String login,
-            @RequestParam @NotBlank String firstName,
-            @RequestParam @NotBlank String lastName,
-            @RequestParam boolean active) {
+            @QueryParam("login") @NotBlank String login,
+            @QueryParam("firstName") @NotBlank String firstName,
+            @QueryParam("lastName") @NotBlank String lastName,
+            @QueryParam("active") boolean active) {
 
         return userManager.createUser(
                 Client.class, login, firstName, lastName, active
         );
     }
 
-    @PostMapping("/resourceAdministrators")
-    @ResponseStatus(HttpStatus.CREATED)
+    @POST
+    @Path("/resourceAdministrators")
     public User addResourceAdministrator(
-            @RequestParam @NotBlank String login,
-            @RequestParam @NotBlank String firstName,
-            @RequestParam @NotBlank String lastName,
-            @RequestParam boolean active) {
+            @QueryParam("login") @NotBlank String login,
+            @QueryParam("firstName") @NotBlank String firstName,
+            @QueryParam("lastName") @NotBlank String lastName,
+            @QueryParam("active") boolean active) {
 
         return userManager.createUser(
                 ResourceAdministrator.class,
@@ -70,13 +74,13 @@ public class UserController {
         );
     }
 
-    @PostMapping("/userAdministrators")
-    @ResponseStatus(HttpStatus.CREATED)
+    @POST
+    @Path("/userAdministrators")
     public User addUserAdministrator(
-            @RequestParam @NotBlank String login,
-            @RequestParam @NotBlank String firstName,
-            @RequestParam @NotBlank String lastName,
-            @RequestParam boolean active) {
+            @QueryParam("login") @NotBlank String login,
+            @QueryParam("firstName") @NotBlank String firstName,
+            @QueryParam("lastName") @NotBlank String lastName,
+            @QueryParam("active") boolean active) {
 
         return userManager.createUser(
                 UserAdministrator.class,
@@ -84,25 +88,25 @@ public class UserController {
         );
     }
 
-    @PatchMapping("/{id}/activate")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void activateUser(@PathVariable String id) {
+    @PATCH
+    @Path("/{id}/activate")
+    public void activateUser(@PathParam("id") String id) {
         userManager.activateUser(id);
     }
 
-    @PatchMapping("/{id}/deactivate")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deactivateUser(@PathVariable String id) {
+    @PATCH
+    @Path("/{id}/deactivate")
+    public void deactivateUser(@PathParam("id") String id) {
         userManager.archiveUser(id);
     }
 
-    @PutMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PUT
+    @Path("/{id}")
     public void updateUser(
-            @PathVariable String id,
-            @RequestParam @NotBlank String firstName,
-            @RequestParam @NotBlank String lastName,
-            @RequestHeader("If-Match") Long version) {
+            @PathParam("id") String id,
+            @QueryParam("firstName") @NotBlank String firstName,
+            @QueryParam("lastName") @NotBlank String lastName,
+            @HeaderParam("If-Match") Long version) {
 
         userManager.updateUser(id, firstName, lastName, version);
     }
