@@ -1,7 +1,6 @@
 package pl.lodz.p.manager;
 
-import org.springframework.stereotype.Service;
-import org.springframework.web.context.annotation.RequestScope;
+import jakarta.enterprise.context.RequestScoped;
 import pl.lodz.p.adapter.RentRepositoryAdapterInterface;
 import pl.lodz.p.adapter.RoomRepositoryAdapterInterface;
 import pl.lodz.p.adapter.UserRepositoryAdapterInterface;
@@ -16,8 +15,7 @@ import pl.lodz.p.model.domain.User;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Service
-@RequestScope
+@RequestScoped
 public class RentManager {
     private final RentRepositoryAdapterInterface rentRepository;
     private final UserRepositoryAdapterInterface userRepository;
@@ -58,11 +56,9 @@ public class RentManager {
 
         room.setRented(true);
 
-        try {
-            roomRepository.save(room);
-        } catch (org.springframework.dao.OptimisticLockingFailureException e) {
-            throw new ConcurrentOperationException("Konflikt współbieżności: Pokój został właśnie wynajęty przez kogoś innego.");
-        }
+
+        roomRepository.save(room);
+
 
         return rentRepository.create(beginTime, client, room);
     }

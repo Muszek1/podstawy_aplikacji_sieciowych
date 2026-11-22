@@ -1,19 +1,14 @@
 package pl.lodz.p.manager;
 
-import org.springframework.dao.DuplicateKeyException;
-import org.springframework.stereotype.Service;
-import org.springframework.web.context.annotation.RequestScope;
+import jakarta.enterprise.context.RequestScoped;
 import pl.lodz.p.adapter.UserRepositoryAdapterInterface;
-import pl.lodz.p.exception.BusinessLogicException;
 import pl.lodz.p.exception.ConcurrentOperationException;
 import pl.lodz.p.exception.EntityNotFoundException;
-import pl.lodz.p.exception.UniqueValueException;
 import pl.lodz.p.model.domain.*;
 
 import java.util.List;
 
-@Service
-@RequestScope
+@RequestScoped
 public class UserManager {
     private final UserRepositoryAdapterInterface adapter;
 
@@ -24,15 +19,8 @@ public class UserManager {
             String lastName,
             boolean active) {
 
-        try {
-            return adapter.create(
-                    userType, login, firstName, lastName, active
-            );
-        }catch (DuplicateKeyException e) {
-            throw new UniqueValueException(
-                    "Konflikt unikalności danych użytkownika"
-            );
-        }
+        return adapter.create(userType, login, firstName, lastName, active);
+
     }
 
     public void updateUser(String id, String firstName, String lastName, Long expectedVersion) {

@@ -1,7 +1,6 @@
 package pl.lodz.p.manager;
 
-import org.springframework.stereotype.Service;
-import org.springframework.web.context.annotation.RequestScope;
+import jakarta.enterprise.context.RequestScoped;
 import pl.lodz.p.adapter.RoomRepositoryAdapterInterface;
 import pl.lodz.p.exception.BusinessLogicException;
 import pl.lodz.p.exception.ConcurrentOperationException;
@@ -11,8 +10,7 @@ import pl.lodz.p.model.domain.*;
 
 import java.util.List;
 
-@Service
-@RequestScope
+@RequestScoped
 public class RoomManager {
     private final RoomRepositoryAdapterInterface adapter;
     private final RentManager rentManager;
